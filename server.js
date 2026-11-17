@@ -53,8 +53,24 @@ app.get('/', (req, res) => {
   res.status(200).send('<!DOCTYPE html><html><head><title>SANDAI</title></head><body><h1>SANDAI Fighting Game</h1><p>Client loading...</p></body></html>');
 });
 
-// Health-check endpoint (useful for Render)
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+// Health-check endpoints (useful for Render, Vercel, and uptime monitors)
+app.get('/health', (_req, res) => res.json({ status: 'ok', game: 'SANDAI' }));
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', game: 'SANDAI', timestamp: Date.now() }));
+
+app.get('/api/characters', (_req, res) => {
+  res.json({
+    characters: [
+      { id: 0, name: 'Abilash', style: 'Inferno Fist', power: 7, speed: 5, defense: 5, special: 8, portrait: 'Abilash.webp' },
+      { id: 1, name: 'Anas', style: 'Iron Guard', power: 6, speed: 4, defense: 9, special: 6, portrait: 'Anas.webp' },
+      { id: 2, name: 'Dhinesh', style: 'Shadow Strike', power: 6, speed: 8, defense: 4, special: 7, portrait: 'Dhinesh.webp' },
+      { id: 3, name: 'Farook', style: 'Thunder Claw', power: 8, speed: 6, defense: 5, special: 6, portrait: 'Farook.webp' },
+      { id: 4, name: 'Kiran', style: 'Storm Blade', power: 7, speed: 7, defense: 5, special: 6, portrait: 'Kiran.webp' },
+      { id: 5, name: 'Nawin', style: 'Venom Fury', power: 5, speed: 6, defense: 6, special: 9, portrait: 'Nawin.webp' },
+      { id: 6, name: 'Rafeek', style: 'Titan Grip', power: 9, speed: 3, defense: 8, special: 5, portrait: 'Rafeek.webp' },
+      { id: 7, name: 'Tharun', style: 'Divine Wrath', power: 7, speed: 5, defense: 6, special: 7, portrait: 'Tharun.webp' }
+    ]
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Socket.IO
@@ -424,8 +440,25 @@ io.on('connection', (socket) => {
 // ---------------------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------------------
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.warn(`[SANDAI Server WARN] Port ${PORT} is in use.`);
+    const fallbackPort = PORT + 1;
+    console.log(`[SANDAI Server] Attempting fallback to port ${fallbackPort}...`);
+    setTimeout(() => {
+      server.listen(fallbackPort, () => {
+        console.log(`[SANDAI Server] listening on fallback port ${fallbackPort}`);
+      });
+    }, 500);
+  } else {
+    console.error('[SANDAI Server Error]', err);
+  }
+});
+
 server.listen(PORT, () => {
   console.log(`[SANDAI Server] listening on port ${PORT}`);
   console.log(`[SANDAI Server] CORS origin: ${CLIENT_URL}`);
   console.log(`[SANDAI Server] Transports: polling, websocket`);
 });
+
+module.exports = { app, server, io };
