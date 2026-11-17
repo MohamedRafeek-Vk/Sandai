@@ -438,27 +438,33 @@ io.on('connection', (socket) => {
 });
 
 // ---------------------------------------------------------------------------
-// Start
+// Start (Only when executed directly, not when imported as a serverless module)
 // ---------------------------------------------------------------------------
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.warn(`[SANDAI Server WARN] Port ${PORT} is in use.`);
-    const fallbackPort = PORT + 1;
-    console.log(`[SANDAI Server] Attempting fallback to port ${fallbackPort}...`);
-    setTimeout(() => {
-      server.listen(fallbackPort, () => {
-        console.log(`[SANDAI Server] listening on fallback port ${fallbackPort}`);
-      });
-    }, 500);
-  } else {
-    console.error('[SANDAI Server Error]', err);
-  }
-});
+if (require.main === module) {
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`[SANDAI Server WARN] Port ${PORT} is in use.`);
+      const fallbackPort = PORT + 1;
+      console.log(`[SANDAI Server] Attempting fallback to port ${fallbackPort}...`);
+      setTimeout(() => {
+        server.listen(fallbackPort, () => {
+          console.log(`[SANDAI Server] listening on fallback port ${fallbackPort}`);
+        });
+      }, 500);
+    } else {
+      console.error('[SANDAI Server Error]', err);
+    }
+  });
 
-server.listen(PORT, () => {
-  console.log(`[SANDAI Server] listening on port ${PORT}`);
-  console.log(`[SANDAI Server] CORS origin: ${CLIENT_URL}`);
-  console.log(`[SANDAI Server] Transports: polling, websocket`);
-});
+  server.listen(PORT, () => {
+    console.log(`[SANDAI Server] listening on port ${PORT}`);
+    console.log(`[SANDAI Server] CORS origin: ${CLIENT_URL}`);
+    console.log(`[SANDAI Server] Transports: polling, websocket`);
+  });
+}
 
-module.exports = { app, server, io };
+// Export app directly for Vercel Express compatibility, attaching server & io
+module.exports = app;
+module.exports.app = app;
+module.exports.server = server;
+module.exports.io = io;
