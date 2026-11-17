@@ -31,26 +31,58 @@ const corsOrigins = CLIENT_URL === '*' ? '*' : CLIENT_URL.split(',').map(s => s.
 
 app.use(cors({ origin: corsOrigins }));
 
+// In-memory pre-compiled game HTML fallback (guarantees zero "Client loading..." placeholders)
+let IN_MEMORY_HTML = '';
+try {
+  IN_MEMORY_HTML = require('./game_html.js');
+} catch (e) {
+  try {
+    IN_MEMORY_HTML = fs.readFileSync(path.resolve(__dirname, 'client', 'index.html'), 'utf8');
+  } catch (e2) {}
+}
+
 // Locate client directory across local, Render, Docker, and cloud environments
 const possibleClientDirs = [
-  path.resolve(__dirname, '..', 'client'),
   path.resolve(__dirname, 'client'),
+  path.resolve(__dirname, '..', 'client'),
   path.resolve(process.cwd(), 'client'),
   path.resolve(process.cwd())
 ];
 
-const resolvedClientDir = possibleClientDirs.find(d => fs.existsSync(path.join(d, 'index.html'))) || path.resolve(__dirname, '..', 'client');
-app.use(express.static(resolvedClientDir));
-
-// Explicit root route to ensure index.html is served under all conditions
-app.get('/', (req, res) => {
-  for (const dir of possibleClientDirs) {
-    const indexPath = path.join(dir, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      return res.sendFile(indexPath);
-    }
+// Serve static assets across all possible client directories
+for (const dir of possibleClientDirs) {
+  if (fs.existsSync(dir)) {
+    app.use(express.static(dir));
+    app.use('/css', express.static(path.join(dir, 'css')));
+    app.use('/js', express.static(path.join(dir, 'js')));
+    app.use('/assets', express.static(path.join(dir, 'assets')));
   }
-  res.status(200).send('<!DOCTYPE html><html><head><title>SANDAI</title></head><body><h1>SANDAI Fighting Game</h1><p>Client loading...</p></body></html>');
+}
+
+// Favicon route
+app.get('/favicon.ico', (_req, res) => {
+  for (const dir of possibleClientDirs) {
+    const ico = path.join(dir, 'favicon.ico');
+    if (fs.existsSync(ico)) return res.sendFile(ico);
+  }
+  res.status(204).end();
+});
+
+// Explicit root route serving the complete SANDAI fighting game
+app.get('/', (_req, res) => {
+  for (const dir of possibleClientDirs) {
+    try {
+      const indexPath = path.join(dir, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        return res.sendFile(indexPath);
+      }
+    } catch (e) {}
+  }
+  // Deliver the full game HTML from memory
+  if (IN_MEMORY_HTML) {
+    return res.status(200).type('html').send(IN_MEMORY_HTML);
+  }
+  res.status(200).type('html').send('<!DOCTYPE html><html><head><title>SANDAI</title></head><body><h1>SANDAI</h1></body></html>');
 });
 
 // Health-check endpoints (useful for Render, Vercel, and uptime monitors)

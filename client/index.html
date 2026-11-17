@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SANDAI — 2D Fighting Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ==================== Screen 1: Home / Title ==================== -->
+  <div id="screen-home" class="screen active">
+    <div class="ember-container" id="ember-container"></div>
+    <div class="home-content">
+      <h1 class="title-sandai">SANDAI</h1>
+      <p class="subtitle">THE ULTIMATE FIGHTING ARENA</p>
+      <button class="btn btn-enter" id="btn-enter">ENTER THE ARENA</button>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 2: Device Selection ==================== -->
+  <div id="screen-device" class="screen">
+    <div class="screen-inner">
+      <h2 class="heading">Which device are you playing on?</h2>
+      <div class="device-cards">
+        <!-- PC Card -->
+        <div class="device-card" id="device-pc">
+          <svg class="device-icon" viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="5" width="80" height="50" rx="4" stroke="currentColor" stroke-width="3" fill="none"/>
+            <rect x="15" y="10" width="70" height="40" rx="2" fill="currentColor" opacity="0.15"/>
+            <rect x="35" y="55" width="30" height="5" fill="currentColor"/>
+            <rect x="25" y="60" width="50" height="4" rx="2" fill="currentColor"/>
+          </svg>
+          <span class="device-label">PC / Laptop</span>
+          <span class="device-sub">Keyboard Controls</span>
+        </div>
+        <!-- Mobile Card -->
+        <div class="device-card" id="device-mobile">
+          <svg class="device-icon" viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="5" width="50" height="90" rx="8" stroke="currentColor" stroke-width="3" fill="none"/>
+            <rect x="10" y="15" width="40" height="65" rx="2" fill="currentColor" opacity="0.15"/>
+            <circle cx="30" cy="88" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
+            <rect x="22" y="9" width="16" height="3" rx="1.5" fill="currentColor" opacity="0.5"/>
+          </svg>
+          <span class="device-label">Mobile</span>
+          <span class="device-sub">Touch Controls</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 3: Game Mode Selection ==================== -->
+  <div id="screen-mode" class="screen">
+    <div class="screen-inner">
+      <button class="btn-back" id="mode-back" title="Back">&#8592;</button>
+      <button class="btn-settings" id="btn-settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
+      <!-- Settings dropdown -->
+      <div class="settings-dropdown hidden" id="settings-dropdown">
+        <button id="btn-change-device">Change Device</button>
+      </div>
+      <h2 class="heading">SELECT GAME MODE</h2>
+      <div class="mode-cards">
+        <!-- Player vs AI -->
+        <div class="mode-card" data-mode="ai">
+          <div class="mode-icon">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
+              <rect x="12" y="16" width="40" height="32" rx="6" stroke="currentColor" stroke-width="3" fill="none"/>
+              <circle cx="24" cy="30" r="4" fill="currentColor"/>
+              <circle cx="40" cy="30" r="4" fill="currentColor"/>
+              <path d="M24 40 h16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <line x1="20" y1="12" x2="20" y2="16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <line x1="44" y1="12" x2="44" y2="16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="mode-label">Player vs AI</span>
+          <span class="mode-desc">Fight against the computer</span>
+        </div>
+        <!-- Local 2P -->
+        <div class="mode-card" data-mode="local">
+          <div class="mode-icon">
+            <svg viewBox="0 0 80 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="34">
+              <rect x="2" y="12" width="30" height="24" rx="5" stroke="currentColor" stroke-width="2.5" fill="none"/>
+              <circle cx="12" cy="22" r="3" fill="currentColor"/>
+              <rect x="20" y="20" width="6" height="6" rx="1" fill="currentColor"/>
+              <rect x="48" y="12" width="30" height="24" rx="5" stroke="currentColor" stroke-width="2.5" fill="none"/>
+              <circle cx="58" cy="22" r="3" fill="currentColor"/>
+              <rect x="66" y="20" width="6" height="6" rx="1" fill="currentColor"/>
+              <path d="M34 24 h12" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3"/>
+            </svg>
+          </div>
+          <span class="mode-label">Local 2P</span>
+          <span class="mode-desc">Same keyboard, two fighters</span>
+          <span class="mode-note hidden" id="mobile-local-note">For the best 2-player experience, use Online Multiplayer</span>
+        </div>
+        <!-- Online Multiplayer -->
+        <div class="mode-card" data-mode="online">
+          <div class="mode-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
+              <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2.5" fill="none"/>
+              <ellipse cx="24" cy="24" rx="10" ry="20" stroke="currentColor" stroke-width="2" fill="none"/>
+              <line x1="4" y1="24" x2="44" y2="24" stroke="currentColor" stroke-width="2"/>
+              <line x1="8" y1="14" x2="40" y2="14" stroke="currentColor" stroke-width="1.5"/>
+              <line x1="8" y1="34" x2="40" y2="34" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <span class="mode-label">Online Multiplayer</span>
+          <span class="mode-desc">Challenge friends online</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 4: Character Selection ==================== -->
+  <div id="screen-character-select" class="screen">
+    <div class="screen-inner charselect-layout">
+      <button class="btn-back" id="charselect-back" title="Back">&#8592;</button>
+      <h2 class="heading">CHOOSE YOUR FIGHTER</h2>
+      <p class="select-prompt" id="select-prompt">Select Player 1</p>
+
+      <!-- Left preview -->
+      <div class="char-preview char-preview-left" id="preview-p1">
+        <img id="preview-p1-img" src="" alt="">
+        <span class="preview-name" id="preview-p1-name"></span>
+        <span class="preview-style" id="preview-p1-style"></span>
+      </div>
+
+      <!-- Character grid -->
+      <div class="char-grid" id="char-grid">
+        <!-- Cards injected by app.js -->
+      </div>
+
+      <!-- Right preview -->
+      <div class="char-preview char-preview-right" id="preview-p2">
+        <img id="preview-p2-img" src="" alt="">
+        <span class="preview-name" id="preview-p2-name"></span>
+        <span class="preview-style" id="preview-p2-style"></span>
+      </div>
+
+      <button class="btn btn-fight hidden" id="btn-fight">FIGHT!</button>
+    </div>
+  </div>
+
+  <!-- ==================== Screen: PC Controls Guide ==================== -->
+  <div id="screen-controls-guide" class="screen">
+    <div class="screen-inner controls-guide-layout">
+      <button class="btn-back" id="guide-back" title="Back">&#8592;</button>
+      <h2 class="heading">KEYBOARD CONTROLS GUIDE</h2>
+      <p class="guide-subtitle">Review your assigned controls before entering the fight</p>
+
+      <div class="controls-guide-grid">
+        <!-- Player 1 Controls -->
+        <div class="controls-player-card">
+          <div class="controls-card-header">
+            <span class="player-badge p1-badge">PLAYER 1</span>
+            <span class="controls-tag">Primary Fighter</span>
+          </div>
+          <div class="key-bindings-list">
+            <div class="key-binding-row">
+              <div class="key-capsules">
+                <span class="key-cap">A</span>
+                <span class="key-cap">D</span>
+              </div>
+              <span class="action-desc">Move Left / Right</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap">W</span></div>
+              <span class="action-desc">Jump</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap">S</span></div>
+              <span class="action-desc">Block (70% Damage Guard)</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap attack-punch">J</span></div>
+              <span class="action-desc">Punch (Fast Attack)</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap attack-kick">K</span></div>
+              <span class="action-desc">Kick (Heavy Attack)</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap attack-special">L</span></div>
+              <span class="action-desc">Special Attack (Elemental Blast)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Player 2 Controls -->
+        <div class="controls-player-card">
+          <div class="controls-card-header">
+            <span class="player-badge p2-badge">PLAYER 2</span>
+            <span class="controls-tag">Opponent / Local 2P</span>
+          </div>
+          <div class="key-bindings-list">
+            <div class="key-binding-row">
+              <div class="key-capsules">
+                <span class="key-cap">◀</span>
+                <span class="key-cap">▶</span>
+              </div>
+              <span class="action-desc">Move Left / Right</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap">▲</span></div>
+              <span class="action-desc">Jump</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap">▼</span></div>
+              <span class="action-desc">Block (70% Damage Guard)</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap attack-punch">1</span></div>
+              <span class="action-desc">Punch (Fast Attack)</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap attack-kick">2</span></div>
+              <span class="action-desc">Kick (Heavy Attack)</span>
+            </div>
+            <div class="key-binding-row">
+              <div class="key-capsules"><span class="key-cap attack-special">3</span></div>
+              <span class="action-desc">Special Attack (Elemental Blast)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-actions">
+        <button class="btn btn-fight" id="btn-start-fight-guide">START FIGHT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 5: VS Screen ==================== -->
+  <div id="screen-vs" class="screen">
+    <div class="vs-layout">
+      <div class="vs-fighter vs-left" id="vs-p1">
+        <img id="vs-p1-img" src="" alt="">
+        <span class="vs-name" id="vs-p1-name"></span>
+        <span class="vs-style" id="vs-p1-style"></span>
+      </div>
+      <div class="vs-center">
+        <span class="vs-text">VS</span>
+      </div>
+      <div class="vs-fighter vs-right" id="vs-p2">
+        <img id="vs-p2-img" src="" alt="">
+        <span class="vs-name" id="vs-p2-name"></span>
+        <span class="vs-style" id="vs-p2-style"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 6: Online Lobby ==================== -->
+  <div id="screen-lobby" class="screen">
+    <div class="screen-inner">
+      <button class="btn-back" id="lobby-back" title="Back">&#8592;</button>
+      <h2 class="heading">ONLINE LOBBY</h2>
+      <div class="connection-status" id="connection-status">
+        <span class="status-dot"></span>
+        <span class="status-text">Connecting...</span>
+        <button class="btn-config-server" id="btn-config-server" title="Set Backend Server URL">⚙ Server</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="lobby-tabs">
+        <button class="lobby-tab active" data-tab="create">Create Room</button>
+        <button class="lobby-tab" data-tab="join">Join Room</button>
+      </div>
+
+      <!-- Create Room Panel -->
+      <div class="lobby-panel active" id="panel-create">
+        <button class="btn btn-create" id="btn-create-room">CREATE ROOM</button>
+        <div class="room-info hidden" id="room-info">
+          <p class="room-label">Room Code</p>
+          <div class="room-code-container">
+            <span class="room-code" id="room-code-display"></span>
+            <button class="btn-copy" id="btn-copy-code" title="Copy code">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+              </svg>
+            </button>
+          </div>
+          <p class="waiting-text"><span class="spinner"></span> Waiting for opponent...</p>
+          <p class="share-hint">Share this code with your friend to start the match!</p>
+        </div>
+      </div>
+
+      <!-- Join Room Panel -->
+      <div class="lobby-panel" id="panel-join">
+        <div class="join-form">
+          <label class="join-label" for="input-room-code">Enter Room Code</label>
+          <input type="text" id="input-room-code" class="input-code" maxlength="6" placeholder="ABCDEF" autocomplete="off" spellcheck="false">
+          <p class="join-feedback hidden" id="join-feedback"></p>
+          <button class="btn btn-join" id="btn-join-room">JOIN</button>
+        </div>
+      </div>
+
+      <!-- Both connected panel -->
+      <div class="lobby-connected hidden" id="lobby-connected">
+        <h3 class="heading heading-sm">Players Connected</h3>
+        <div class="lobby-players">
+          <div class="lobby-player" id="lobby-player1">
+            <span class="lobby-player-label">Player 1 (Host)</span>
+            <div class="lobby-char-select" id="lobby-char-p1">Select Character</div>
+          </div>
+          <div class="lobby-player" id="lobby-player2">
+            <span class="lobby-player-label">Player 2</span>
+            <div class="lobby-char-select" id="lobby-char-p2">Select Character</div>
+          </div>
+        </div>
+        <button class="btn btn-ready" id="btn-ready">READY</button>
+        <p class="ready-status" id="ready-status"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 7: Game Arena ==================== -->
+  <div id="screen-game" class="screen">
+    <div id="game-container"></div>
+    <button class="btn-pause" id="btn-pause" title="Pause">❚❚</button>
+    <!-- Mobile touch controls injected dynamically by app.js -->
+  </div>
+
+  <!-- ==================== Screen 8: Winner / Result ==================== -->
+  <div id="screen-winner" class="screen">
+    <div class="winner-content">
+      <img class="winner-portrait" id="winner-portrait" src="" alt="">
+      <h2 class="winner-name" id="winner-name"></h2>
+      <p class="winner-label">WINS!</p>
+      <div class="match-stats" id="match-stats">
+        <!-- Filled by app.js -->
+      </div>
+      <div class="winner-buttons">
+        <button class="btn btn-rematch" id="btn-rematch">Rematch</button>
+        <button class="btn btn-charselect" id="btn-charselect">Character Select</button>
+        <button class="btn btn-mainmenu" id="btn-mainmenu">Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Scripts ==================== -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="js/fighters.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
