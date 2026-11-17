@@ -25,10 +25,33 @@ const MIN_HEALTH = 0;
 const app = express();
 const server = http.createServer(app);
 
+const fs = require('fs');
+
 const corsOrigins = CLIENT_URL === '*' ? '*' : CLIENT_URL.split(',').map(s => s.trim());
 
 app.use(cors({ origin: corsOrigins }));
-app.use(express.static(path.join(__dirname, '..', 'client')));
+
+// Locate client directory across local, Render, Docker, and cloud environments
+const possibleClientDirs = [
+  path.resolve(__dirname, '..', 'client'),
+  path.resolve(__dirname, 'client'),
+  path.resolve(process.cwd(), 'client'),
+  path.resolve(process.cwd())
+];
+
+const resolvedClientDir = possibleClientDirs.find(d => fs.existsSync(path.join(d, 'index.html'))) || path.resolve(__dirname, '..', 'client');
+app.use(express.static(resolvedClientDir));
+
+// Explicit root route to ensure index.html is served under all conditions
+app.get('/', (req, res) => {
+  for (const dir of possibleClientDirs) {
+    const indexPath = path.join(dir, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+  }
+  res.status(200).send('<!DOCTYPE html><html><head><title>SANDAI</title></head><body><h1>SANDAI Fighting Game</h1><p>Client loading...</p></body></html>');
+});
 
 // Health-check endpoint (useful for Render)
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
