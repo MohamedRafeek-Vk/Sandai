@@ -269,6 +269,14 @@
 
       var damage = this.currentAttack.damage * multiplier;
       opponent.takeDamage(damage);
+
+      // Trigger scene visual effects: Hit sparks, shockwaves, camera shake
+      if (this.scene && typeof this.scene.onHitLanded === 'function') {
+        var impactX = (this.x + opponent.x) / 2;
+        var impactY = this.y - 70;
+        this.scene.onHitLanded(this, opponent, this.currentAttack.type, impactX, impactY);
+      }
+
       return true;
     }
     return false;

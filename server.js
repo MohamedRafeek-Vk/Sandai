@@ -265,6 +265,16 @@ io.on('connection', (socket) => {
     });
   });
 
+  // ---- select-arena --------------------------------------------------
+  socket.on('select-arena', (data) => {
+    const room = getRoom(data?.roomCode);
+    if (!room || !playerInRoom(room, socket.id)) return;
+    const validArenas = ['mountain', 'forest', 'rainy', 'volcanic', 'nightcity'];
+    const arena = validArenas.includes(data.arena) ? data.arena : 'mountain';
+    room.arena = arena;
+    io.to(room.code).emit('arena-selected', { arena });
+  });
+
   // ---- player-ready --------------------------------------------------
   socket.on('player-ready', (data) => {
     const room = getRoom(data?.roomCode);
@@ -467,6 +477,18 @@ io.on('connection', (socket) => {
     socket.to(code).emit('player-reconnected', { playerIndex: entry.playerIndex });
     console.log(`[reconnect] ${socket.id} restored to room ${code} as player ${entry.playerIndex}`);
   });
+});
+
+// Catch-all route to guarantee the game HTML is always served across all cloud environments
+app.get('*', (_req, res) => {
+  for (const dir of possibleClientDirs) {
+    try {
+      const indexPath = path.join(dir, 'index.html');
+      if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+    } catch (e) {}
+  }
+  if (IN_MEMORY_HTML) return res.status(200).type('html').send(IN_MEMORY_HTML);
+  res.status(200).type('html').send('<!DOCTYPE html><html><head><title>SANDAI</title></head><body><h1>SANDAI</h1></body></html>');
 });
 
 // ---------------------------------------------------------------------------

@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0a0f">
   <title>SANDAI — 2D Fighting Game</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,6 +14,21 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+
+  <!-- ==================== Landscape Orientation Prompt (Mobile) ==================== -->
+  <div id="landscape-prompt" class="landscape-prompt hidden">
+    <div class="rotate-phone-icon">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" width="40" height="40">
+        <rect x="8" y="14" width="32" height="20" rx="3"/>
+        <path d="M12 24h1m22 0h1M4 20l4-4 4 4M44 28l-4 4-4-4"/>
+      </svg>
+    </div>
+    <div class="rotate-text">
+      <strong>ROTATE TO LANDSCAPE</strong>
+      <span>For the ultimate fighting arena experience</span>
+    </div>
+    <button class="btn-dismiss-rotate" id="btn-dismiss-rotate" title="Dismiss">✕</button>
+  </div>
 
   <!-- ==================== Screen 1: Home / Title ==================== -->
   <div id="screen-home" class="screen active">
@@ -144,7 +162,80 @@
         <span class="preview-style" id="preview-p2-style"></span>
       </div>
 
-      <button class="btn btn-fight hidden" id="btn-fight">FIGHT!</button>
+      <button class="btn btn-fight hidden" id="btn-fight">CHOOSE ARENA ➔</button>
+    </div>
+  </div>
+
+  <!-- ==================== Screen: Arena Selection ==================== -->
+  <div id="screen-arena-select" class="screen">
+    <div class="screen-inner arenaselect-layout">
+      <button class="btn-back" id="arenaselect-back" title="Back">&#8592;</button>
+      <h2 class="heading">SELECT FIGHTING ARENA</h2>
+      <p class="select-prompt">Choose your battlefield</p>
+
+      <div class="arena-grid" id="arena-grid">
+        <!-- Mountain Arena -->
+        <div class="arena-card active" data-arena="mountain">
+          <div class="arena-thumb arena-thumb-mountain">
+            <div class="arena-badge">SNOW & FOG</div>
+            <div class="arena-hazard">Atmospheric Fog • Drifting Snow</div>
+          </div>
+          <div class="arena-info">
+            <h3 class="arena-title">Mountain Shrine</h3>
+            <p class="arena-desc">Ancient snow-capped peaks, drifting cloud layers, and dusk mountain lanterns.</p>
+          </div>
+        </div>
+
+        <!-- Forest Arena -->
+        <div class="arena-card" data-arena="forest">
+          <div class="arena-thumb arena-thumb-forest">
+            <div class="arena-badge">MYSTICAL</div>
+            <div class="arena-hazard">Sunlight Rays • Falling Leaves</div>
+          </div>
+          <div class="arena-info">
+            <h3 class="arena-title">Bamboo Sanctuary</h3>
+            <p class="arena-desc">Dense bamboo groves, god rays piercing the misty canopy, and ancient stone lanterns.</p>
+          </div>
+        </div>
+
+        <!-- Rainy Arena -->
+        <div class="arena-card" data-arena="rainy">
+          <div class="arena-thumb arena-thumb-rainy">
+            <div class="arena-badge">STORM</div>
+            <div class="arena-hazard">Torrential Rain • Lightning Flashes</div>
+          </div>
+          <div class="arena-info">
+            <h3 class="arena-title">Storm Pagoda</h3>
+            <p class="arena-desc">Thunderstorm drenched pagoda temple with lightning strikes and wet ground reflections.</p>
+          </div>
+        </div>
+
+        <!-- Volcanic Arena -->
+        <div class="arena-card" data-arena="volcanic">
+          <div class="arena-thumb arena-thumb-volcanic">
+            <div class="arena-badge">HAZARD</div>
+            <div class="arena-hazard">Molten Lava • Rising Embers</div>
+          </div>
+          <div class="arena-info">
+            <h3 class="arena-title">Molten Core</h3>
+            <p class="arena-desc">Deep volcanic fissure with rivers of molten magma, rising heat embers, and obsidian rock.</p>
+          </div>
+        </div>
+
+        <!-- Night City Arena -->
+        <div class="arena-card" data-arena="nightcity">
+          <div class="arena-thumb arena-thumb-nightcity">
+            <div class="arena-badge">CYBERPUNK</div>
+            <div class="arena-hazard">Neon Lights • Rooftop Skyline</div>
+          </div>
+          <div class="arena-info">
+            <h3 class="arena-title">Night City Rooftop</h3>
+            <p class="arena-desc">Futuristic metropolis rooftop with glowing neon billboards and illuminated skyscrapers.</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-fight" id="btn-confirm-arena">ENTER BATTLE ➔</button>
     </div>
   </div>
 
@@ -323,7 +414,14 @@
   <!-- ==================== Screen 7: Game Arena ==================== -->
   <div id="screen-game" class="screen">
     <div id="game-container"></div>
-    <button class="btn-pause" id="btn-pause" title="Pause">❚❚</button>
+    <div class="arena-top-actions">
+      <button class="btn-arena-action btn-fullscreen" id="btn-fullscreen" title="Toggle Fullscreen">
+        <svg class="fs-icon fs-enter" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+      </button>
+      <button class="btn-arena-action btn-pause" id="btn-pause" title="Pause">❚❚</button>
+    </div>
     <!-- Mobile touch controls injected dynamically by app.js -->
   </div>
 

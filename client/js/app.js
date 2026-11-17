@@ -13,6 +13,7 @@
   window.SANDAI.gameMode = null;          // 'ai', 'local', 'online'
   window.SANDAI.player1Character = 0;     // ID 0-7
   window.SANDAI.player2Character = 1;     // ID 0-7
+  window.SANDAI.selectedArena = 'mountain'; // 'mountain', 'forest', 'rainy', 'volcanic', 'nightcity'
   window.SANDAI.socket = null;            // Socket.IO client instance
   window.SANDAI.roomCode = null;          // Active multiplayer room code
   window.SANDAI.playerNumber = 1;         // 1 (host) or 2 (guest)
@@ -48,11 +49,15 @@
     setupDeviceScreen();
     setupModeScreen();
     setupCharacterSelectScreen();
+    setupArenaSelectScreen();
     setupControlsGuideScreen();
     setupLobbyScreen();
     setupWinnerScreen();
     setupGameControls();
     createBackgroundEmbers();
+    if (window.SANDAI.Controls && window.SANDAI.Controls.initMobileOptimizations) {
+      window.SANDAI.Controls.initMobileOptimizations();
+    }
   });
 
   // ── Home Screen ──────────────────────────────────────────────
@@ -315,6 +320,52 @@
     if (style) style.textContent = c.style;
   }
 
+  // ── Arena Selection Screen Handlers ─────────────────────────
+  function setupArenaSelectScreen() {
+    var backBtn = document.getElementById('arenaselect-back');
+    if (backBtn) {
+      backBtn.addEventListener('click', function () {
+        if (window.SANDAI.gameMode === 'online') {
+          showScreen('screen-lobby');
+        } else {
+          showScreen('screen-character-select');
+        }
+      });
+    }
+
+    var arenaCards = document.querySelectorAll('.arena-card');
+    arenaCards.forEach(function (card) {
+      card.addEventListener('click', function () {
+        arenaCards.forEach(function (c) { c.classList.remove('active'); });
+        card.classList.add('active');
+        window.SANDAI.selectedArena = card.dataset.arena || 'mountain';
+      });
+    });
+
+    var btnConfirm = document.getElementById('btn-confirm-arena');
+    if (btnConfirm) {
+      btnConfirm.addEventListener('click', function () {
+        onArenaSelected();
+      });
+    }
+  }
+
+  function onArenaSelected() {
+    // If online, broadcast arena selection to the room
+    if (window.SANDAI.socket && window.SANDAI.roomCode) {
+      window.SANDAI.socket.emit('select-arena', {
+        roomCode: window.SANDAI.roomCode,
+        arena: window.SANDAI.selectedArena
+      });
+    }
+
+    if (window.SANDAI.deviceType === 'pc') {
+      showScreen('screen-controls-guide');
+    } else {
+      startMatchSequence();
+    }
+  }
+
   // ── PC Controls Guide Screen Handlers ────────────────────────
   function setupControlsGuideScreen() {
     var btnStart = document.getElementById('btn-start-fight-guide');
@@ -331,21 +382,15 @@
         if (window.SANDAI.gameMode === 'online') {
           showScreen('screen-lobby');
         } else {
-          showScreen('screen-character-select');
+          showScreen('screen-arena-select');
         }
       });
     }
   }
 
-  // Entry point before fight: Check device type for controls guide
+  // Entry point before fight: Proceed to Arena Selection
   function onFightTriggered() {
-    if (window.SANDAI.deviceType === 'pc') {
-      // Show PC Controls Guide before fight starts
-      showScreen('screen-controls-guide');
-    } else {
-      // Mobile players skip the keyboard guide completely
-      startMatchSequence();
-    }
+    showScreen('screen-arena-select');
   }
 
   // ── VS Screen & Match Sequence ───────────────────────────────
@@ -464,6 +509,13 @@
         window.SANDAI.player2Character = data.characterId;
         var p2El = document.getElementById('lobby-char-p2');
         if (p2El) p2El.textContent = c.name + ' (' + c.style + ')';
+      }
+    });
+
+    // Arena selected sync
+    socket.on('arena-selected', function (data) {
+      if (data && data.arena) {
+        window.SANDAI.selectedArena = data.arena;
       }
     });
 

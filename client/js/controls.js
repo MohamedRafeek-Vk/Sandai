@@ -212,6 +212,10 @@
         inputState.p1[action] = true;
         if (action === 'punch' || action === 'kick' || action === 'special' || action === 'jump') {
           inputPressed.p1[action] = true;
+          // Subtle haptic response on attack & jump
+          try {
+            if (navigator.vibrate) navigator.vibrate(15);
+          } catch (vhErr) {}
         }
         btn.classList.add('touch-pressed');
       }
@@ -312,6 +316,76 @@
     inputPressed.p2.jump = false;
   }
 
+  // ── Fullscreen API ───────────────────────────────────────────
+  function toggleFullscreen() {
+    var doc = window.document;
+    var docEl = doc.documentElement;
+
+    var isFS = doc.fullscreenElement || doc.mozFullScreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+    if (!isFS) {
+      var req = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+      if (req) {
+        req.call(docEl).catch(function () {});
+      }
+    } else {
+      var exit = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+      if (exit) {
+        exit.call(doc).catch(function () {});
+      }
+    }
+  }
+
+  // ── Landscape Orientation Helper ─────────────────────────────
+  var rotateDismissed = false;
+
+  function checkOrientation() {
+    var promptEl = document.getElementById('landscape-prompt');
+    if (!promptEl || rotateDismissed) return;
+
+    var isMobile = (window.SANDAI.deviceType === 'mobile') || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    var isPortrait = window.innerHeight > window.innerWidth;
+
+    if (isMobile && isPortrait) {
+      promptEl.classList.remove('hidden');
+    } else {
+      promptEl.classList.add('hidden');
+    }
+  }
+
+  function initMobileOptimizations() {
+    // Check initial orientation
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    var btnDismiss = document.getElementById('btn-dismiss-rotate');
+    if (btnDismiss) {
+      btnDismiss.addEventListener('click', function () {
+        rotateDismissed = true;
+        var promptEl = document.getElementById('landscape-prompt');
+        if (promptEl) promptEl.classList.add('hidden');
+      });
+    }
+
+    // Connect Fullscreen Button
+    var btnFs = document.getElementById('btn-fullscreen');
+    if (btnFs) {
+      btnFs.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFullscreen();
+      });
+    }
+
+    // Prevent accidental gesture navigation / zoom during fighting
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('dblclick', function (e) {
+      if (e.target && (e.target.closest('#screen-game') || e.target.closest('#sandai-touch-controls'))) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  }
+
   window.SANDAI.Controls = {
     initKeyboard: initKeyboard,
     destroyKeyboard: destroyKeyboard,
@@ -320,7 +394,9 @@
     getP1Input: getP1Input,
     getP2Input: getP2Input,
     clearPressed: clearPressed,
-    inputState: inputState
+    inputState: inputState,
+    toggleFullscreen: toggleFullscreen,
+    initMobileOptimizations: initMobileOptimizations
   };
 
 })();

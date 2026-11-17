@@ -157,6 +157,10 @@ const CHARACTERS = [
     facialHair: 'none',
     specialFeature: null,
     costume: 'open_karate_gi',
+    torsoR: 17,
+    hipR: 15,
+    limbScale: 1.0,
+    specialType: 'fire_dragon',
     primary: [240, 190, 20],   // Gold Gi
     secondary: [200, 30, 30],  // Crimson flame borders
     belt: [20, 20, 20],        // Black master belt
@@ -176,6 +180,10 @@ const CHARACTERS = [
     facialHair: 'full_beard',
     specialFeature: null,
     costume: 'kungfu_master',
+    torsoR: 18,
+    hipR: 16,
+    limbScale: 1.05,
+    specialType: 'iron_shockwave',
     primary: [245, 245, 250],  // Silk White Master Jacket
     secondary: [120, 130, 140], // Steel trim
     belt: [70, 75, 85],        // Iron Sash
@@ -195,6 +203,10 @@ const CHARACTERS = [
     facialHair: 'stubble',
     specialFeature: 'flaming_eye', // CYAN FLAMING EYE!
     costume: 'shinobi_tunic',
+    torsoR: 14,
+    hipR: 13,
+    limbScale: 0.88,
+    specialType: 'cyan_phantom',
     primary: [80, 60, 120],    // Midnight Slate
     secondary: [160, 140, 210], // Lavender accents
     belt: [45, 35, 65],        // Dark Shinobi sash
@@ -214,6 +226,10 @@ const CHARACTERS = [
     facialHair: 'goatee',
     specialFeature: null,
     costume: 'changshan_tunic',
+    torsoR: 18,
+    hipR: 16,
+    limbScale: 1.05,
+    specialType: 'thunder_claw',
     primary: [35, 95, 190],    // Royal Blue
     secondary: [240, 195, 30], // Pure Gold embroidery
     belt: [230, 180, 20],      // Gold sash
@@ -233,6 +249,10 @@ const CHARACTERS = [
     facialHair: 'stubble',
     specialFeature: 'silver_chain',
     costume: 'brawler_vest',
+    torsoR: 19,
+    hipR: 17,
+    limbScale: 1.1,
+    specialType: 'storm_blade',
     primary: [190, 40, 40],    // Crimson Vest
     secondary: [30, 30, 30],   // Black leather trim
     belt: [40, 40, 45],        // Heavy utility belt
@@ -252,6 +272,10 @@ const CHARACTERS = [
     facialHair: 'heavy_beard',
     specialFeature: null,
     costume: 'venom_hood',
+    torsoR: 15,
+    hipR: 14,
+    limbScale: 0.92,
+    specialType: 'venom_acid',
     primary: [40, 145, 65],    // Toxic Green
     secondary: [20, 75, 35],   // Dark Serpent green
     belt: [160, 100, 30],      // Bronze studded belt
@@ -271,6 +295,10 @@ const CHARACTERS = [
     facialHair: 'thick_beard',
     specialFeature: 'gold_chain',
     costume: 'wrestler_jacket',
+    torsoR: 24,
+    hipR: 20,
+    limbScale: 1.28,
+    specialType: 'titan_earth',
     primary: [225, 115, 20],   // Rust Orange
     secondary: [85, 45, 20],   // Dark leather harness
     belt: [65, 35, 15],        // Heavy leather belt
@@ -290,6 +318,10 @@ const CHARACTERS = [
     facialHair: 'trimmed_beard',
     specialFeature: 'vibhuti_tilak', // SACRED VIBHUTI + KUMKUMA TILAK!
     costume: 'divine_robes',
+    torsoR: 17,
+    hipR: 15,
+    limbScale: 1.0,
+    specialType: 'divine_trident',
     primary: [250, 245, 225],  // Cream Silk Angavastram
     secondary: [225, 180, 40], // Pure Gold Zari embroidery
     belt: [180, 30, 50],       // Crimson sash
@@ -340,38 +372,42 @@ function renderFighter(buf, ox, oy, char, pose) {
   const headX = torsoX + (pose.headTiltX || 0);
   const headY = torsoY - 26;
 
+  const torsoR = char.torsoR || 17;
+  const hipR = char.hipR || 15;
+  const ls = char.limbScale || 1.0;
+
   // --- 2. BACK LEG ---
-  const bHipX = hipX - 10;
+  const bHipX = hipX - 10 * ls;
   const bHipY = hipY;
-  const bKneeX = bHipX + pose.bKneeDX;
+  const bKneeX = bHipX + pose.bKneeDX * ls;
   const bKneeY = bHipY + pose.bKneeDY;
-  const bFootX = bKneeX + pose.bFootDX;
+  const bFootX = bKneeX + pose.bFootDX * ls;
   const bFootY = bKneeY + pose.bFootDY;
 
-  buf.fillLimb(bHipX, bHipY, bKneeX, bKneeY, 11, 8.5, darken(pants, 25), pants, pantsShadow);
-  buf.fillLimb(bKneeX, bKneeY, bFootX, bFootY, 8.5, 7.5, darken(pants, 25), pants, pantsShadow);
-  buf.fillCircle(bKneeX, bKneeY, 8, darken(pants, 35));
+  buf.fillLimb(bHipX, bHipY, bKneeX, bKneeY, 11 * ls, 8.5 * ls, darken(pants, 25), pants, pantsShadow);
+  buf.fillLimb(bKneeX, bKneeY, bFootX, bFootY, 8.5 * ls, 7.5 * ls, darken(pants, 25), pants, pantsShadow);
+  buf.fillCircle(bKneeX, bKneeY, 8 * ls, darken(pants, 35));
 
   // Back Foot
-  buf.fillLimb(bFootX - 1, bFootY - 12, bFootX, bFootY, 7, 6, darken(boots, 20), boots, bootsShadow);
-  buf.fillLimb(bFootX - 3, bFootY, bFootX + 11, bFootY, 5.5, 4.5, darken(boots, 20), boots, bootsShadow);
+  buf.fillLimb(bFootX - 1, bFootY - 12, bFootX, bFootY, 7 * ls, 6 * ls, darken(boots, 20), boots, bootsShadow);
+  buf.fillLimb(bFootX - 3, bFootY, bFootX + 11 * ls, bFootY, 5.5 * ls, 4.5 * ls, darken(boots, 20), boots, bootsShadow);
 
   // --- 3. BACK ARM (Guarding Chest/Solar Plexus) ---
-  const bShX = torsoX - 8;
+  const bShX = torsoX - 8 * ls;
   const bShY = torsoY - 8;
-  const bElbX = bShX + pose.bElbDX;
+  const bElbX = bShX + pose.bElbDX * ls;
   const bElbY = bShY + pose.bElbDY;
-  const bFistX = bElbX + pose.bFistDX;
+  const bFistX = bElbX + pose.bFistDX * ls;
   const bFistY = bElbY + pose.bFistDY;
 
-  buf.fillCircle(bShX, bShY, 8, darken(skin, 25));
-  buf.fillLimb(bShX, bShY, bElbX, bElbY, 8, 6.5, darken(skin, 25), skin, skinShadow);
-  buf.fillLimb(bElbX, bElbY, bFistX, bFistY, 6.5, 6, darken(wraps, 20), wraps, wrapsShadow);
-  buf.fillCircle(bFistX, bFistY, 6.5, darken(wraps, 20));
+  buf.fillCircle(bShX, bShY, 8 * ls, darken(skin, 25));
+  buf.fillLimb(bShX, bShY, bElbX, bElbY, 8 * ls, 6.5 * ls, darken(skin, 25), skin, skinShadow);
+  buf.fillLimb(bElbX, bElbY, bFistX, bFistY, 6.5 * ls, 6 * ls, darken(wraps, 20), wraps, wrapsShadow);
+  buf.fillCircle(bFistX, bFistY, 6.5 * ls, darken(wraps, 20));
 
   // --- 4. TORSO & WAIST ---
-  buf.fillCircle(hipX, hipY, 15, darken(pants, 15));
-  buf.fillLimb(hipX, hipY, torsoX, torsoY, 16, 18, skin, skinHigh, skinShadow);
+  buf.fillCircle(hipX, hipY, hipR, darken(pants, 15));
+  buf.fillLimb(hipX, hipY, torsoX, torsoY, hipR, torsoR, skin, skinHigh, skinShadow);
 
   // Six-pack abdominal muscles
   const midX = (hipX + torsoX) / 2;
@@ -478,21 +514,21 @@ function renderFighter(buf, ox, oy, char, pose) {
   }
 
   // --- 6. FRONT LEG ---
-  const fHipX = hipX + 8;
+  const fHipX = hipX + 8 * ls;
   const fHipY = hipY;
-  const fKneeX = fHipX + pose.fKneeDX;
+  const fKneeX = fHipX + pose.fKneeDX * ls;
   const fKneeY = fHipY + pose.fKneeDY;
-  const fFootX = fKneeX + pose.fFootDX;
+  const fFootX = fKneeX + pose.fFootDX * ls;
   const fFootY = fKneeY + pose.fFootDY;
 
-  buf.fillLimb(fHipX, fHipY, fKneeX, fKneeY, 12, 9, pants, pantsHigh, pantsShadow);
-  buf.fillLimb(fKneeX, fKneeY, fFootX, fFootY, 9, 8, pants, pantsHigh, pantsShadow);
-  buf.fillCircle(fKneeX, fKneeY, 8.5, darken(pants, 20));
+  buf.fillLimb(fHipX, fHipY, fKneeX, fKneeY, 12 * ls, 9 * ls, pants, pantsHigh, pantsShadow);
+  buf.fillLimb(fKneeX, fKneeY, fFootX, fFootY, 9 * ls, 8 * ls, pants, pantsHigh, pantsShadow);
+  buf.fillCircle(fKneeX, fKneeY, 8.5 * ls, darken(pants, 20));
 
   // Front Foot
-  buf.fillLimb(fFootX - 1, fFootY - 13, fFootX, fFootY, 7.5, 6.5, boots, bootsHigh, bootsShadow);
-  const toeExtend = (pose.kickExtend ? 24 : 14);
-  buf.fillLimb(fFootX - 4, fFootY, fFootX + toeExtend, fFootY, 6, 4.5, boots, bootsHigh, bootsShadow);
+  buf.fillLimb(fFootX - 1, fFootY - 13, fFootX, fFootY, 7.5 * ls, 6.5 * ls, boots, bootsHigh, bootsShadow);
+  const toeExtend = (pose.kickExtend ? 24 : 14) * ls;
+  buf.fillLimb(fFootX - 4, fFootY, fFootX + toeExtend, fFootY, 6 * ls, 4.5 * ls, boots, bootsHigh, bootsShadow);
 
   // Tharun sacred Alta & anklet
   if (char.name === 'tharun') {
@@ -596,17 +632,17 @@ function renderFighter(buf, ox, oy, char, pose) {
   }
 
   // --- 8. FRONT ARM (Raised in Front Guard / Attacking) ---
-  const fShX = torsoX + 12;
+  const fShX = torsoX + 12 * ls;
   const fShY = torsoY - 8;
-  const fElbX = fShX + pose.fElbDX;
+  const fElbX = fShX + pose.fElbDX * ls;
   const fElbY = fShY + pose.fElbDY;
-  const fFistX = fElbX + pose.fFistDX;
+  const fFistX = fElbX + pose.fFistDX * ls;
   const fFistY = fElbY + pose.fFistDY;
 
-  buf.fillCircle(fShX, fShY, 9, skin, skinHigh);
-  buf.fillLimb(fShX, fShY, fElbX, fElbY, 9, 7.5, skin, skinHigh, skinShadow);
-  buf.fillLimb(fElbX, fElbY, fFistX, fFistY, 7.5, 7, wraps, wrapsHigh, wrapsShadow);
-  buf.fillCircle(fFistX, fFistY, 7.5, wraps, wrapsHigh);
+  buf.fillCircle(fShX, fShY, 9 * ls, skin, skinHigh);
+  buf.fillLimb(fShX, fShY, fElbX, fElbY, 9 * ls, 7.5 * ls, skin, skinHigh, skinShadow);
+  buf.fillLimb(fElbX, fElbY, fFistX, fFistY, 7.5 * ls, 7 * ls, wraps, wrapsHigh, wrapsShadow);
+  buf.fillCircle(fFistX, fFistY, 7.5 * ls, wraps, wrapsHigh);
 
   // Punch Impact Effect
   if (pose.punchImpact) {
@@ -616,23 +652,80 @@ function renderFighter(buf, ox, oy, char, pose) {
     }
   }
 
-  // --- 9. SPECIAL ATTACK SIGNATURE ENERGY WAVE ---
+  // --- 9. SPECIAL ATTACK SIGNATURE ENERGY BURST ---
   if (pose.specialFX) {
     const sc = char.specialColor;
     const fxX = torsoX + 50;
     const fxY = torsoY - 4;
+    const sType = char.specialType || 'fire_dragon';
 
-    for (let r = 40; r > 0; r -= 4) {
-      buf.fillCircle(fxX, fxY, r, sc, 75);
-    }
-    buf.fillCircle(fxX, fxY, 22, [255, 255, 255], 220);
-    buf.fillCircle(fxX, fxY, 14, sc, 240);
-
-    for (let p = 0; p < 12; p++) {
-      const pAngle = (p * 30) * (Math.PI / 180);
-      const px = fxX + Math.cos(pAngle) * 36;
-      const py = fxY + Math.sin(pAngle) * 28;
-      buf.fillLimb(fxX, fxY, px, py, 3, 1, sc, lighten(sc, 80));
+    if (sType === 'fire_dragon') {
+      // Abilash: Blazing Dragon Flame Vortex
+      for (let r = 42; r > 0; r -= 4) {
+        buf.fillCircle(fxX, fxY, r, [255, 60, 10], 80);
+      }
+      for (let f = 0; f < 10; f++) {
+        const a = (f * 36) * (Math.PI / 180);
+        buf.fillCircle(fxX + Math.cos(a) * 32, fxY + Math.sin(a) * 20, 10, [255, 200, 20], 190);
+        buf.fillCircle(fxX + Math.cos(a) * 20, fxY + Math.sin(a) * 12, 6, [255, 255, 255], 240);
+      }
+    } else if (sType === 'iron_shockwave') {
+      // Anas: Metallic Sonic Palm Shockwaves
+      for (let sw = 15; sw <= 45; sw += 10) {
+        buf.fillCircle(fxX, fxY, sw, [180, 220, 255], 85);
+        buf.fillCircle(fxX, fxY, sw - 3, [0, 0, 0], 0);
+      }
+      buf.fillCircle(fxX, fxY, 18, [255, 255, 255], 255);
+    } else if (sType === 'cyan_phantom') {
+      // Dhinesh: Void Blade Arc / Soul Phantom Wave
+      for (let r = 38; r > 0; r -= 5) {
+        buf.fillCircle(fxX, fxY, r, [0, 230, 255], 100);
+      }
+      buf.fillLimb(fxX - 10, fxY - 35, fxX + 25, fxY, 6, 2, [0, 255, 255], [255, 255, 255]);
+      buf.fillLimb(fxX - 10, fxY + 35, fxX + 25, fxY, 6, 2, [0, 255, 255], [255, 255, 255]);
+    } else if (sType === 'thunder_claw') {
+      // Farook: Crackling Golden Thunder Bolts
+      for (let r = 36; r > 0; r -= 4) {
+        buf.fillCircle(fxX, fxY, r, [70, 170, 255], 90);
+      }
+      buf.fillLimb(fxX - 25, fxY - 20, fxX + 10, fxY - 5, 3, 3, [255, 230, 50], [255, 255, 255]);
+      buf.fillLimb(fxX + 10, fxY - 5, fxX - 5, fxY + 12, 3, 3, [255, 230, 50], [255, 255, 255]);
+      buf.fillLimb(fxX - 5, fxY + 12, fxX + 30, fxY + 25, 3.5, 1.5, [255, 230, 50], [255, 255, 255]);
+    } else if (sType === 'storm_blade') {
+      // Kiran: Crimson Cross Energy Blade
+      for (let r = 38; r > 0; r -= 4) {
+        buf.fillCircle(fxX, fxY, r, [255, 40, 40], 85);
+      }
+      buf.fillLimb(fxX - 20, fxY - 30, fxX + 25, fxY + 30, 5, 2, [255, 60, 60], [255, 255, 255]);
+      buf.fillLimb(fxX - 20, fxY + 30, fxX + 25, fxY - 30, 5, 2, [255, 60, 60], [255, 255, 255]);
+    } else if (sType === 'venom_acid') {
+      // Nawin: Toxic Serpent Acid Burst
+      for (let r = 38; r > 0; r -= 4) {
+        buf.fillCircle(fxX, fxY, r, [50, 220, 80], 90);
+      }
+      for (let b = 0; b < 7; b++) {
+        const ba = (b * 51) * (Math.PI / 180);
+        buf.fillCircle(fxX + Math.cos(ba) * 26, fxY + Math.sin(ba) * 22, 7, [70, 255, 100], 210);
+        buf.fillCircle(fxX + Math.cos(ba) * 26, fxY + Math.sin(ba) * 22, 3.5, [220, 255, 230], 255);
+      }
+    } else if (sType === 'titan_earth') {
+      // Rafeek: Massive Molten Seismic Boulder Burst
+      for (let r = 46; r > 0; r -= 4) {
+        buf.fillCircle(fxX, fxY, r, [255, 140, 20], 90);
+      }
+      for (let rk = 0; rk < 6; rk++) {
+        const ra = (rk * 60) * (Math.PI / 180);
+        buf.fillCircle(fxX + Math.cos(ra) * 30, fxY + Math.sin(ra) * 26, 11, [85, 45, 20], 230);
+        buf.fillCircle(fxX + Math.cos(ra) * 30, fxY + Math.sin(ra) * 26, 7, [255, 160, 30], 255);
+      }
+    } else if (sType === 'divine_trident') {
+      // Tharun: Sacred Golden Surya Trident Burst
+      for (let r = 42; r > 0; r -= 4) {
+        buf.fillCircle(fxX, fxY, r, [255, 220, 60], 90);
+      }
+      buf.fillLimb(fxX - 25, fxY, fxX + 35, fxY, 4, 3, [255, 215, 0], [255, 255, 255]);
+      buf.fillLimb(fxX + 15, fxY - 22, fxX + 35, fxY - 22, 3, 2, [255, 215, 0], [255, 255, 255]);
+      buf.fillLimb(fxX + 15, fxY + 22, fxX + 35, fxY + 22, 3, 2, [255, 215, 0], [255, 255, 255]);
     }
   }
 
