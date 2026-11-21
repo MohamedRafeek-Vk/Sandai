@@ -131,7 +131,7 @@
       // Controls Setup
       if (window.SANDAI.Controls) {
         window.SANDAI.Controls.initKeyboard();
-        if (window.SANDAI.deviceType === 'mobile') {
+        if (window.SANDAI.deviceType === 'mobile' || (window.SANDAI.deviceType !== 'pc' && (window.innerWidth <= 900 || ('ontouchstart' in window)))) {
           window.SANDAI.Controls.createTouchControls();
         }
       }
@@ -1200,6 +1200,14 @@
         window.SANDAI.Audio.playVictory();
       }
 
+      // If online and host, immediately broadcast match-result so both clients sync simultaneously
+      if (this.isOnline && this.localPlayerIndex === 0 && window.SANDAI.socket && window.SANDAI.roomCode) {
+        window.SANDAI.socket.emit('match-result', {
+          roomCode: window.SANDAI.roomCode,
+          winner: winnerPlayerNum === 1 ? 0 : 1
+        });
+      }
+
       this.showAnnouncement(winnerChar.name.toUpperCase() + ' WINS!', 2000, () => {
         if (typeof window.SANDAI.onMatchComplete === 'function') {
           window.SANDAI.onMatchComplete({
@@ -1255,6 +1263,14 @@
           self.fighter2.y = s.p2Y;
           self.fighter2.health = s.p2Hp;
           if (s.timer !== undefined) self.roundTimer = s.timer;
+        }
+      });
+
+      socket.off('match-result');
+      socket.on('match-result', (data) => {
+        if (self.localPlayerIndex === 1 && !self.matchOver) {
+          var winnerPlayerNum = (data.winner === 0) ? 1 : 2;
+          self.handleMatchComplete(winnerPlayerNum);
         }
       });
     }

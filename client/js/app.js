@@ -122,6 +122,12 @@
       if (typeof updateVSScreen === 'function') updateVSScreen();
     }
 
+    if (screenId === 'screen-lobby') {
+      window.SANDAI.gameMode = 'online';
+      initSocketMultiplayer();
+      if (typeof updateLobbyUI === 'function') updateLobbyUI();
+    }
+
     // Toggle Training Mode in-game HUD overlay
     var trainingOverlay = document.getElementById('training-overlay');
     if (trainingOverlay) {
@@ -135,6 +141,11 @@
     // Toggle in-fight state & orientation check for landscape prompt
     if (screenId === 'screen-game') {
       document.body.classList.add('in-fight');
+      if (window.SANDAI.deviceType === 'mobile' || (window.SANDAI.deviceType !== 'pc' && (window.innerWidth <= 900 || ('ontouchstart' in window)))) {
+        if (window.SANDAI.Controls && typeof window.SANDAI.Controls.createTouchControls === 'function') {
+          window.SANDAI.Controls.createTouchControls();
+        }
+      }
       if (window.SANDAI.Controls && typeof window.SANDAI.Controls.checkOrientation === 'function') {
         window.SANDAI.Controls.checkOrientation();
       }
@@ -490,7 +501,9 @@
     // Auto-detect or restore saved device
     var savedDevice = localStorage.getItem('sandai_device');
     if (!savedDevice) {
-      var isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      var isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) ||
+        (window.innerWidth <= 900);
       savedDevice = isMobileDevice ? 'mobile' : 'pc';
     }
     window.SANDAI.deviceType = savedDevice;
@@ -1114,30 +1127,42 @@
       }
     } catch (e) {}
 
-    // 2. Global runtime override
-    if (window.SANDAI_SERVER_URL && window.SANDAI_SERVER_URL.trim()) {
-      return window.SANDAI_SERVER_URL.trim().replace(/\/$/, '');
-    }
-
-    // 3. User saved endpoint in localStorage
-    var savedUrl = localStorage.getItem('sandai_server_url');
-    if (savedUrl && savedUrl.trim()) {
-      return savedUrl.trim().replace(/\/$/, '');
-    }
-
-    // 4. Localhost or file execution
     var hostname = window.location.hostname || '';
     var protocol = window.location.protocol || '';
+
+    // 2. Render Web Service Deployment: ALWAYS prioritize same-origin connection!
+    if (hostname.includes('onrender.com')) {
+      return window.location.origin.replace(/\/$/, '');
+    }
+
+    // 3. Global runtime override (ignore insecure localhost if on HTTPS)
+    if (window.SANDAI_SERVER_URL && window.SANDAI_SERVER_URL.trim()) {
+      var sUrl = window.SANDAI_SERVER_URL.trim().replace(/\/$/, '');
+      if (!(protocol === 'https:' && sUrl.startsWith('http://localhost'))) {
+        return sUrl;
+      }
+    }
+
+    // 4. User saved endpoint in localStorage (ignore insecure localhost if on HTTPS)
+    var savedUrl = localStorage.getItem('sandai_server_url');
+    if (savedUrl && savedUrl.trim()) {
+      var sUrl = savedUrl.trim().replace(/\/$/, '');
+      if (!(protocol === 'https:' && sUrl.startsWith('http://localhost'))) {
+        return sUrl;
+      }
+    }
+
+    // 5. Localhost or file execution
     if (protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
       return 'http://localhost:3000';
     }
 
-    // 5. Vercel deployment: connect to persistent Render backend
+    // 6. Vercel deployment: connect to persistent Render backend
     if (hostname.includes('vercel.app')) {
       return 'https://sandai-backend.onrender.com';
     }
 
-    // 6. Default to current web origin
+    // 7. Default to current web origin
     return window.location.origin ? window.location.origin.replace(/\/$/, '') : 'http://localhost:3000';
   }
 
@@ -1146,27 +1171,48 @@
     var statusText = document.querySelector('#connection-status .status-text');
 
     if (window.SANDAI.socket && window.SANDAI.socket.connected) {
+      if (statusDot) statusDot.className = 'status-dot connected';
+      if (statusText) statusText.textContent = 'Connected';
       return;
     }
 
+    if (statusDot) statusDot.className = 'status-dot connecting';
+    if (statusText) statusText.textContent = 'Connecting...';
+
     var serverUrl = resolveServerUrl();
+
+    // If socket already exists, ensure it is connecting
+    if (window.SANDAI.socket) {
+      if (!window.SANDAI.socket.connected) {
+        window.SANDAI.socket.connect();
+      }
+      return;
+    }
 
     try {
       window.SANDAI.socket = io(serverUrl, {
         transports: ['polling', 'websocket'],
-        reconnectionAttempts: 8,
-        timeout: 10000
+        reconnection: true,
+        reconnectionAttempts: 25,
+        reconnectionDelay: 1200,
+        reconnectionDelayMax: 4000,
+        timeout: 15000
       });
     } catch (e) {
       console.warn('Socket.IO init error:', e);
+      if (statusDot) statusDot.className = 'status-dot disconnected';
+      if (statusText) statusText.textContent = 'Socket Error';
       return;
     }
 
     var socket = window.SANDAI.socket;
 
     socket.on('connect', function () {
-      if (statusDot) statusDot.className = 'status-dot connected';
-      if (statusText) statusText.textContent = 'Connected';
+      console.log('[Multiplayer] Connected to server:', serverUrl);
+      var dot = document.querySelector('#connection-status .status-dot');
+      var txt = document.querySelector('#connection-status .status-text');
+      if (dot) dot.className = 'status-dot connected';
+      if (txt) txt.textContent = 'Connected';
 
       // Start Latency / Ping Monitor
       if (pingInterval) clearInterval(pingInterval);
@@ -1190,20 +1236,26 @@
       }
     });
 
-    socket.on('connect_error', function () {
-      if (statusDot) statusDot.className = 'status-dot disconnected';
-      if (statusText) {
-        if (window.location.hostname.includes('vercel.app') && !localStorage.getItem('sandai_server_url')) {
-          statusText.textContent = 'Backend Reconnecting (Render waking up ~30s)';
+    socket.on('connect_error', function (err) {
+      console.warn('[Multiplayer] Socket connect_error:', err);
+      var dot = document.querySelector('#connection-status .status-dot');
+      var txt = document.querySelector('#connection-status .status-text');
+      if (dot) dot.className = 'status-dot disconnected';
+      if (txt) {
+        if (window.location.hostname.includes('onrender.com') || window.location.hostname.includes('vercel.app')) {
+          txt.textContent = 'Waking up server (~30s)...';
         } else {
-          statusText.textContent = 'Server Offline';
+          txt.textContent = 'Server Offline';
         }
       }
     });
 
-    socket.on('disconnect', function () {
-      if (statusDot) statusDot.className = 'status-dot disconnected';
-      if (statusText) statusText.textContent = 'Disconnected';
+    socket.on('disconnect', function (reason) {
+      console.log('[Multiplayer] Socket disconnected:', reason);
+      var dot = document.querySelector('#connection-status .status-dot');
+      var txt = document.querySelector('#connection-status .status-text');
+      if (dot) dot.className = 'status-dot disconnected';
+      if (txt) txt.textContent = 'Disconnected';
       if (pingInterval) clearInterval(pingInterval);
     });
 
@@ -1628,6 +1680,285 @@
         window.SANDAI.p2Ready = false;
         updateLobbyUI();
         showScreen('screen-mode');
+      });
+    }
+
+    // ── Tab Switching: Create Room vs Join Room ──
+    var lobbyTabs = document.querySelectorAll('.lobby-tab');
+    var panelCreate = document.getElementById('panel-create');
+    var panelJoin = document.getElementById('panel-join');
+    lobbyTabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        lobbyTabs.forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        var target = tab.getAttribute('data-tab');
+        if (target === 'join') {
+          if (panelCreate) panelCreate.classList.remove('active');
+          if (panelJoin) {
+            panelJoin.classList.add('active');
+            var input = document.getElementById('input-room-code');
+            if (input) setTimeout(function () { input.focus(); }, 120);
+          }
+        } else {
+          if (panelJoin) panelJoin.classList.remove('active');
+          if (panelCreate) panelCreate.classList.add('active');
+        }
+      });
+    });
+
+    // ── Create Room Button ──
+    var btnCreate = document.getElementById('btn-create-room');
+    if (btnCreate) {
+      btnCreate.addEventListener('click', function () {
+        if (!window.SANDAI.socket || !window.SANDAI.socket.connected) {
+          initSocketMultiplayer();
+          var statusText = document.querySelector('#connection-status .status-text');
+          if (statusText) statusText.textContent = 'Connecting to server...';
+          btnCreate.disabled = true;
+          btnCreate.textContent = 'CONNECTING... ⏳';
+          var waited = 0;
+          var checkConn = setInterval(function () {
+            waited += 250;
+            if (window.SANDAI.socket && window.SANDAI.socket.connected) {
+              clearInterval(checkConn);
+              btnCreate.disabled = false;
+              btnCreate.textContent = 'CREATE NEW ROOM';
+              btnCreate.click();
+            } else if (waited >= 5000) {
+              clearInterval(checkConn);
+              btnCreate.disabled = false;
+              btnCreate.textContent = 'CREATE NEW ROOM';
+              alert('Could not establish connection to the multiplayer server. Please verify your connection or use the ⚙ Server settings.');
+            }
+          }, 250);
+          return;
+        }
+
+        btnCreate.disabled = true;
+        btnCreate.textContent = 'CREATING ROOM... ⏳';
+
+        var initialChar = (window.SANDAI.player1Character !== undefined && window.SANDAI.player1Character !== null)
+          ? window.SANDAI.player1Character : 0;
+
+        window.SANDAI.socket.emit('create-room', {
+          characterId: initialChar
+        }, function (res) {
+          btnCreate.disabled = false;
+          btnCreate.textContent = 'CREATE NEW ROOM';
+          if (res && res.error) {
+            alert('Error creating room: ' + res.error);
+          } else if (res && res.code) {
+            window.SANDAI.roomCode = res.code;
+            window.SANDAI.playerNumber = 1;
+            window.SANDAI.guestConnected = false;
+            window.SANDAI.selectedArena = res.arena || 'mountain';
+            window.SANDAI.p1Ready = false;
+            window.SANDAI.p2Ready = false;
+            updateLobbyUI();
+          }
+        });
+      });
+    }
+
+    // ── Join Room Button & Enter Key ──
+    var btnJoin = document.getElementById('btn-join-room');
+    var inputCode = document.getElementById('input-room-code');
+    var feedbackEl = document.getElementById('join-feedback');
+
+    function doJoinRoom() {
+      if (!inputCode) return;
+      var code = (inputCode.value || '').trim().toUpperCase();
+      if (!code || code.length !== 6) {
+        if (feedbackEl) {
+          feedbackEl.textContent = 'Please enter a valid 6-character room code (e.g. ABC123).';
+          feedbackEl.className = 'join-feedback error';
+          feedbackEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (!window.SANDAI.socket || !window.SANDAI.socket.connected) {
+        initSocketMultiplayer();
+        if (feedbackEl) {
+          feedbackEl.textContent = 'Connecting to server, please wait a moment...';
+          feedbackEl.className = 'join-feedback';
+          feedbackEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (btnJoin) {
+        btnJoin.disabled = true;
+        btnJoin.textContent = 'JOINING... ⏳';
+      }
+      if (feedbackEl) feedbackEl.classList.add('hidden');
+
+      var initialChar = (window.SANDAI.player2Character !== undefined && window.SANDAI.player2Character !== null)
+        ? window.SANDAI.player2Character : 1;
+
+      window.SANDAI.socket.emit('join-room', {
+        code: code,
+        characterId: initialChar
+      }, function (res) {
+        if (btnJoin) {
+          btnJoin.disabled = false;
+          btnJoin.textContent = 'JOIN ROOM';
+        }
+        if (res && res.error) {
+          if (feedbackEl) {
+            feedbackEl.textContent = res.error;
+            feedbackEl.className = 'join-feedback error';
+            feedbackEl.classList.remove('hidden');
+          }
+        } else if (res && res.code) {
+          window.SANDAI.roomCode = res.code;
+          window.SANDAI.playerNumber = 2;
+          window.SANDAI.guestConnected = true;
+          window.SANDAI.selectedArena = res.arena || 'mountain';
+          updateLobbyUI();
+        }
+      });
+    }
+
+    if (btnJoin) {
+      btnJoin.addEventListener('click', doJoinRoom);
+    }
+    if (inputCode) {
+      inputCode.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          doJoinRoom();
+        }
+      });
+    }
+
+    // ── Copy Room Code & Share Invite Link ──
+    var btnCopyCode = document.getElementById('btn-copy-code');
+    if (btnCopyCode) {
+      btnCopyCode.addEventListener('click', function () {
+        if (window.SANDAI.roomCode) {
+          copyToClipboard(window.SANDAI.roomCode, 'Room code copied to clipboard: ' + window.SANDAI.roomCode);
+        }
+      });
+    }
+
+    var btnCopyLink = document.getElementById('btn-copy-link');
+    if (btnCopyLink) {
+      btnCopyLink.addEventListener('click', function () {
+        if (window.SANDAI.roomCode) {
+          var inviteUrl = window.location.origin + window.location.pathname + '?room=' + window.SANDAI.roomCode;
+          if (navigator.share && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)) {
+            navigator.share({
+              title: 'Join SANDAI Online Fight',
+              text: 'Fight me in SANDAI! Room code: ' + window.SANDAI.roomCode,
+              url: inviteUrl
+            }).catch(function () {
+              copyToClipboard(inviteUrl, 'Invite link copied to clipboard!');
+            });
+          } else {
+            copyToClipboard(inviteUrl, 'Invite link copied to clipboard!');
+          }
+        }
+      });
+    }
+
+    // ── Leave Room Button ──
+    var btnLeave = document.getElementById('btn-leave-room');
+    if (btnLeave) {
+      btnLeave.addEventListener('click', function () {
+        if (window.SANDAI.socket && window.SANDAI.roomCode) {
+          window.SANDAI.socket.emit('leave-room', { roomCode: window.SANDAI.roomCode });
+        }
+        window.SANDAI.roomCode = null;
+        window.SANDAI.guestConnected = false;
+        window.SANDAI.p1Ready = false;
+        window.SANDAI.p2Ready = false;
+        updateLobbyUI();
+      });
+    }
+
+    // ── Fighter Change Buttons in Lobby ──
+    var btnChangeP1 = document.getElementById('btn-change-char-p1');
+    if (btnChangeP1) {
+      btnChangeP1.addEventListener('click', function () {
+        if (window.SANDAI.playerNumber === 1) {
+          startCharacterSelection(1);
+        }
+      });
+    }
+
+    var btnChangeP2 = document.getElementById('btn-change-char-p2');
+    if (btnChangeP2) {
+      btnChangeP2.addEventListener('click', function () {
+        if (window.SANDAI.playerNumber === 2) {
+          startCharacterSelection(2);
+        }
+      });
+    }
+
+    // ── Arena Selection Cards in Lobby (Host Only) ──
+    var lobbyArenaCards = document.querySelectorAll('.lobby-arena-card');
+    lobbyArenaCards.forEach(function (card) {
+      card.addEventListener('click', function () {
+        if (window.SANDAI.playerNumber !== 1) return; // Only host chooses arena
+        var arena = card.getAttribute('data-arena');
+        if (arena && window.SANDAI.socket && window.SANDAI.roomCode) {
+          window.SANDAI.selectedArena = arena;
+          window.SANDAI.p1Ready = false;
+          window.SANDAI.p2Ready = false;
+          window.SANDAI.socket.emit('select-arena', {
+            roomCode: window.SANDAI.roomCode,
+            arena: arena
+          });
+          updateLobbyUI();
+        }
+      });
+    });
+
+    // ── Ready Button ──
+    var btnReady = document.getElementById('btn-ready');
+    if (btnReady) {
+      btnReady.addEventListener('click', function () {
+        if (!window.SANDAI.socket || !window.SANDAI.roomCode) return;
+        var isHost = (window.SANDAI.playerNumber === 1);
+        var currentReady = isHost ? window.SANDAI.p1Ready : window.SANDAI.p2Ready;
+        var nextReady = !currentReady;
+        if (isHost) window.SANDAI.p1Ready = nextReady;
+        else window.SANDAI.p2Ready = nextReady;
+        updateLobbyUI();
+        window.SANDAI.socket.emit('player-ready', {
+          roomCode: window.SANDAI.roomCode,
+          ready: nextReady,
+          autoStart: false
+        });
+      });
+    }
+
+    // ── Start Match Button (Host Only) ──
+    var btnStartMatch = document.getElementById('btn-start-match');
+    if (btnStartMatch) {
+      btnStartMatch.addEventListener('click', function () {
+        if (window.SANDAI.playerNumber !== 1) return; // Host only
+        if (!window.SANDAI.guestConnected || !window.SANDAI.p1Ready || !window.SANDAI.p2Ready) {
+          return;
+        }
+        if (window.SANDAI.socket && window.SANDAI.roomCode) {
+          btnStartMatch.disabled = true;
+          btnStartMatch.textContent = 'LAUNCHING... ⚔';
+          window.SANDAI.socket.emit('start-match', {
+            roomCode: window.SANDAI.roomCode
+          }, function (ack) {
+            if (ack && ack.error) {
+              btnStartMatch.disabled = false;
+              updateLobbyUI();
+              var readyStatus = document.getElementById('ready-status');
+              if (readyStatus) {
+                readyStatus.textContent = ack.error;
+                readyStatus.style.color = '#ff3344';
+              }
+            }
+          });
+        }
       });
     }
 

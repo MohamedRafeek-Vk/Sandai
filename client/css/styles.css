@@ -3703,8 +3703,17 @@ button {
   padding: 2rem;
 }
 
-.landscape-prompt-overlay.hidden {
+.landscape-prompt-overlay.hidden,
+#landscape-prompt.hidden,
+#landscape-prompt.dismissed {
   display: none !important;
+}
+
+@media screen and (orientation: landscape) {
+  #landscape-prompt,
+  .landscape-prompt-overlay {
+    display: none !important;
+  }
 }
 
 .landscape-prompt-box {
@@ -3783,7 +3792,7 @@ button {
 
 /* Auto-show landscape prompt on mobile portrait during fight */
 @media screen and (orientation: portrait) and (max-width: 900px) {
-  body.in-fight #landscape-prompt:not(.dismissed) {
+  body.in-fight #landscape-prompt:not(.dismissed):not(.hidden) {
     display: flex !important;
   }
 }

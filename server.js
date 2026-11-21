@@ -109,10 +109,14 @@ app.get('/api/characters', (_req, res) => {
 // ---------------------------------------------------------------------------
 const io = new Server(server, {
   cors: {
-    origin: corsOrigins === '*' ? '*' : corsOrigins,
+    origin: '*',
     methods: ['GET', 'POST'],
+    credentials: false
   },
   transports: ['polling', 'websocket'],
+  allowEIO3: true,
+  pingTimeout: 30000,
+  pingInterval: 12000
 });
 
 // ---------------------------------------------------------------------------
@@ -659,7 +663,7 @@ if (require.main === module) {
       const fallbackPort = PORT + 1;
       console.log(`[SANDAI Server] Attempting fallback to port ${fallbackPort}...`);
       setTimeout(() => {
-        server.listen(fallbackPort, () => {
+        server.listen(fallbackPort, '0.0.0.0', () => {
           console.log(`[SANDAI Server] listening on fallback port ${fallbackPort}`);
         });
       }, 500);
@@ -668,9 +672,9 @@ if (require.main === module) {
     }
   });
 
-  server.listen(PORT, () => {
-    console.log(`[SANDAI Server] listening on port ${PORT}`);
-    console.log(`[SANDAI Server] CORS origin: ${CLIENT_URL}`);
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`[SANDAI Server] listening on 0.0.0.0:${PORT}`);
+    console.log(`[SANDAI Server] CORS origin: *`);
     console.log(`[SANDAI Server] Transports: polling, websocket`);
   });
 }

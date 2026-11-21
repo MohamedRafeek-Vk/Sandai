@@ -492,6 +492,19 @@
   // ── Landscape Orientation Helper ─────────────────────────────
   var rotateDismissed = false;
 
+  function isLandscapeMode() {
+    if (window.matchMedia && window.matchMedia('(orientation: landscape)').matches) {
+      return true;
+    }
+    if (window.screen && window.screen.orientation && window.screen.orientation.type) {
+      return window.screen.orientation.type.includes('landscape');
+    }
+    if (typeof window.orientation === 'number') {
+      return Math.abs(window.orientation) === 90;
+    }
+    return window.innerWidth > window.innerHeight;
+  }
+
   function checkOrientation() {
     var promptEl = document.getElementById('landscape-prompt');
     if (!promptEl) return;
@@ -500,35 +513,93 @@
       /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
       (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
 
-    var isPortrait = window.innerHeight > window.innerWidth;
-    var inFight = document.body.classList.contains('in-fight') || (window.SANDAI && window.SANDAI.currentScreen === 'game');
+    var isLandscape = isLandscapeMode();
+    var isPortrait = !isLandscape;
+    var inFight = document.body.classList.contains('in-fight') || 
+                  (window.SANDAI && (window.SANDAI.currentScreen === 'game' || window.SANDAI.currentScreen === 'screen-game'));
 
-    if (!isPortrait) {
-      // Rotated to landscape: reset dismissal for future fights
+    if (isLandscape) {
       rotateDismissed = false;
-    }
-
-    if (isMobile && isPortrait && inFight && !rotateDismissed) {
-      promptEl.classList.remove('hidden');
-      promptEl.style.display = 'flex';
-    } else {
       promptEl.classList.add('hidden');
+      promptEl.classList.remove('active');
       promptEl.style.display = 'none';
+
+      // Dynamically resize 3D renderer and camera in landscape
+      if (inFight && window.SANDAI.activeRenderer3D && !window.SANDAI.activeRenderer3D.isDestroyed) {
+        window.SANDAI.activeRenderer3D.onResize();
+      }
+      if (inFight && window.SANDAI.activeFightScene && window.SANDAI.activeFightScene.scale) {
+        var gc = document.getElementById('game-container');
+        var gw = (gc && gc.clientWidth > 0) ? gc.clientWidth : window.innerWidth;
+        var gh = (gc && gc.clientHeight > 0) ? gc.clientHeight : window.innerHeight;
+        window.SANDAI.activeFightScene.scale.resize(gw, gh);
+        if (typeof window.SANDAI.activeFightScene.drawHUD === 'function') {
+          window.SANDAI.activeFightScene.drawHUD(gw, gh);
+        }
+      }
+    } else {
+      if (isMobile && inFight && !rotateDismissed) {
+        promptEl.classList.remove('hidden');
+        promptEl.classList.add('active');
+        promptEl.style.display = 'flex';
+        resetAllInputs();
+      } else {
+        promptEl.classList.add('hidden');
+        promptEl.classList.remove('active');
+        promptEl.style.display = 'none';
+      }
     }
   }
 
   function initMobileOptimizations() {
     // Check initial orientation
     checkOrientation();
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
+
+    function onOrientationOrResize() {
+      checkOrientation();
+    }
+
+    window.addEventListener('resize', onOrientationOrResize);
+    window.addEventListener('orientationchange', function () {
+      resetAllInputs();
+      onOrientationOrResize();
+      setTimeout(onOrientationOrResize, 50);
+      setTimeout(onOrientationOrResize, 150);
+      setTimeout(onOrientationOrResize, 350);
+      setTimeout(onOrientationOrResize, 600);
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', onOrientationOrResize);
+    }
+    if (window.matchMedia) {
+      var mql = window.matchMedia('(orientation: landscape)');
+      if (mql.addEventListener) {
+        mql.addEventListener('change', onOrientationOrResize);
+      } else if (mql.addListener) {
+        mql.addListener(onOrientationOrResize);
+      }
+    }
+
+    if (typeof ResizeObserver !== 'undefined') {
+      var ro = new ResizeObserver(function () {
+        onOrientationOrResize();
+      });
+      ro.observe(document.body);
+      var gc = document.getElementById('game-container');
+      if (gc) ro.observe(gc);
+    }
 
     var btnDismiss = document.getElementById('btn-dismiss-rotate');
     if (btnDismiss) {
       btnDismiss.addEventListener('click', function () {
         rotateDismissed = true;
         var promptEl = document.getElementById('landscape-prompt');
-        if (promptEl) promptEl.classList.add('hidden');
+        if (promptEl) {
+          promptEl.classList.add('hidden');
+          promptEl.classList.add('dismissed');
+          promptEl.style.display = 'none';
+        }
       });
     }
 
