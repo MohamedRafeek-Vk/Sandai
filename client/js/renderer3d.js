@@ -132,12 +132,17 @@
 
   Renderer3D.preloadAssets = preloadAssets;
 
+  Renderer3D.prototype.isMobileDevice = function () {
+    return (window.SANDAI && window.SANDAI.deviceType === 'mobile') ||
+      /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) ||
+      (window.innerWidth <= 900);
+  };
+
   Renderer3D.prototype.resolveQuality = function () {
     var pref = localStorage.getItem('sandai_graphics_quality') || 'auto';
     if (pref !== 'auto') return pref;
-    var isMobile = (window.SANDAI && window.SANDAI.deviceType === 'mobile') ||
-                   /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-                   (window.innerWidth < 768);
+    var isMobile = this.isMobileDevice();
     var cores = navigator.hardwareConcurrency || 4;
     if (isMobile) return cores <= 4 ? 'low' : 'medium';
     return 'high';
@@ -146,6 +151,7 @@
   Renderer3D.prototype.init = function () {
     var width = this.container.clientWidth || 1280;
     var height = this.container.clientHeight || 720;
+    window.SANDAI.activeRenderer3D = this;
 
     // 1. Scene setup
     this.scene = new THREE.Scene();
@@ -157,19 +163,20 @@
 
     // 3. WebGL Renderer
     this.renderer = new THREE.WebGLRenderer({
-      antialias: this.quality !== 'low',
+      antialias: this.quality !== 'low' && !this.isMobileDevice(),
       powerPreference: 'high-performance',
       alpha: false
     });
     this.renderer.setSize(width, height);
-    var dpr = this.quality === 'high' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+    var dpr = this.quality === 'high' ? Math.min(window.devicePixelRatio || 1, 2) :
+              (this.quality === 'medium' ? Math.min(window.devicePixelRatio || 1, 1.5) : 1);
     this.renderer.setPixelRatio(dpr);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.2;
 
     if (this.quality !== 'low') {
       this.renderer.shadowMap.enabled = true;
-      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      this.renderer.shadowMap.type = this.isMobileDevice() ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
     }
 
     // Append canvas to container without wiping Phaser DOM HUD
@@ -269,8 +276,9 @@
   Renderer3D.prototype.setupShadows = function (light) {
     if (this.quality === 'low') return;
     light.castShadow = true;
-    light.shadow.mapSize.width = 1024;
-    light.shadow.mapSize.height = 1024;
+    var size = (this.quality === 'medium' || this.isMobileDevice()) ? 512 : 1024;
+    light.shadow.mapSize.width = size;
+    light.shadow.mapSize.height = size;
     light.shadow.camera.near = 0.5;
     light.shadow.camera.far = 30;
     light.shadow.camera.left = -10;
@@ -1307,22 +1315,36 @@
     var p2Pos = this.fighter2Mesh ? this.fighter2Mesh.position : new THREE.Vector3(2.5, 0, 0);
 
     var midX = (p1Pos.x + p2Pos.x) / 2;
-    var midY = (p1Pos.y + p2Pos.y) / 2 + 1.35;
+    var isMobile = this.isMobileDevice();
+    var aspect = (this.container && this.container.clientHeight > 0) ?
+      (this.container.clientWidth / this.container.clientHeight) : 1.77;
+
+    // Mobile camera elevation: lift target slightly higher so fighters' feet stay well above touch buttons
+    var elev = isMobile ? 1.52 : 1.35;
+    var midY = (p1Pos.y + p2Pos.y) / 2 + elev;
     var dist = Math.abs(p1Pos.x - p2Pos.x);
 
-    // Dynamic zoom based on combat range
-    var targetDist = Math.max(5.4, Math.min(8.6, dist * 1.32 + 2.8));
+    // Dynamic zoom based on combat range & screen aspect ratio
+    var minD = isMobile ? 6.2 : 5.4;
+    var maxD = isMobile ? 9.8 : 8.6;
+    var targetDist = Math.max(minD, Math.min(maxD, dist * 1.35 + 2.9));
+
+    // Dynamic aspect ratio compensation: widen distance if aspect ratio is narrower (< 1.75)
+    if (aspect < 1.75) {
+      targetDist *= Math.sqrt(1.75 / Math.max(0.65, aspect));
+    }
 
     if (this.isCinematicCloseUp) {
-      targetDist = 4.2;
-      midY = 1.15;
+      targetDist = isMobile ? 4.8 : 4.2;
+      midY = isMobile ? 1.35 : 1.15;
       this.cinematicTimer -= delta;
       if (this.cinematicTimer <= 0) this.isCinematicCloseUp = false;
     }
 
     // Spring-damper smooth tracking
+    var camYOffset = isMobile ? 0.52 : 0.35;
     this.camera.position.x = THREE.MathUtils.damp(this.camera.position.x, midX, 6.0, delta);
-    this.camera.position.y = THREE.MathUtils.damp(this.camera.position.y, midY + 0.35, 6.0, delta);
+    this.camera.position.y = THREE.MathUtils.damp(this.camera.position.y, midY + camYOffset, 6.0, delta);
     this.camera.position.z = THREE.MathUtils.damp(this.camera.position.z, targetDist, 5.0, delta);
 
     // Multi-axis Camera Shake
@@ -1528,15 +1550,18 @@
 
     var width = container.clientWidth || 400;
     var height = container.clientHeight || 380;
+    var isMobile = (window.SANDAI && window.SANDAI.deviceType === 'mobile') || (window.innerWidth <= 900);
 
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 50);
-    camera.position.set(0, 1.05, 4.0);
+    var camZ = isMobile ? 4.5 : 4.0;
+    camera.position.set(0, 1.05, camZ);
     camera.lookAt(0, 0.95, 0);
 
-    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    var renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: true });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    var dpr = isMobile ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.5);
+    renderer.setPixelRatio(dpr);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.25;
 
@@ -1561,7 +1586,7 @@
 
     var dummyRenderer = Object.create(Renderer3D.prototype);
     dummyRenderer.scene = scene;
-    dummyRenderer.quality = 'high';
+    dummyRenderer.quality = isMobile ? 'medium' : 'high';
     dummyRenderer.mixers = [];
 
     var model = dummyRenderer.createFighterModel(charData, 0);
@@ -1589,9 +1614,20 @@
     }
     previewLoop();
 
+    var onPrevResize = function () {
+      if (!container || !container.parentNode) return;
+      var nw = container.clientWidth || 300;
+      var nh = container.clientHeight || 260;
+      camera.aspect = nw / nh;
+      camera.updateProjectionMatrix();
+      renderer.setSize(nw, nh);
+    };
+    window.addEventListener('resize', onPrevResize);
+
     return {
       destroy: function () {
         if (animId) cancelAnimationFrame(animId);
+        window.removeEventListener('resize', onPrevResize);
         try { renderer.dispose(); } catch (e) {}
         if (renderer.domElement && renderer.domElement.parentNode) {
           renderer.domElement.parentNode.removeChild(renderer.domElement);

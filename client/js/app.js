@@ -23,6 +23,35 @@
   window.SANDAI.p1Ready = false;
   window.SANDAI.p2Ready = false;
 
+  // Auto-detect mobile device & touch capabilities
+  var isMobileAuto = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) ||
+    (window.innerWidth <= 900);
+  var savedDev = localStorage.getItem('sandai_device') || (isMobileAuto ? 'mobile' : 'pc');
+  window.SANDAI.deviceType = savedDev;
+
+  function applyDeviceClass(type) {
+    if (type === 'mobile') {
+      document.body.classList.add('is-mobile');
+      document.body.classList.remove('is-desktop');
+    } else {
+      document.body.classList.add('is-desktop');
+      document.body.classList.remove('is-mobile');
+    }
+  }
+  applyDeviceClass(savedDev);
+
+  // Audio unlocking on mobile touch / pointer interaction
+  function unlockAudioOnTouch() {
+    if (window.SANDAI.Audio && window.SANDAI.Audio.unlock) {
+      window.SANDAI.Audio.unlock();
+    }
+    window.removeEventListener('touchstart', unlockAudioOnTouch);
+    window.removeEventListener('pointerdown', unlockAudioOnTouch);
+  }
+  window.addEventListener('touchstart', unlockAudioOnTouch, { passive: true });
+  window.addEventListener('pointerdown', unlockAudioOnTouch, { passive: true });
+
   var currentSelectionStep = 1; // 1: P1 selecting, 2: P2 selecting
   var active3DPreview = null;   // Active Three.js 3D character showcase instance
 
@@ -106,8 +135,8 @@
     // Toggle in-fight state & orientation check for landscape prompt
     if (screenId === 'screen-game') {
       document.body.classList.add('in-fight');
-      if (typeof checkOrientation === 'function') {
-        checkOrientation();
+      if (window.SANDAI.Controls && typeof window.SANDAI.Controls.checkOrientation === 'function') {
+        window.SANDAI.Controls.checkOrientation();
       }
     } else {
       document.body.classList.remove('in-fight');
@@ -435,6 +464,7 @@
     function selectDevice(type) {
       window.SANDAI.deviceType = type;
       localStorage.setItem('sandai_device', type);
+      applyDeviceClass(type);
 
       if (type === 'mobile') {
         if (mobileNote) mobileNote.classList.remove('hidden');
@@ -784,6 +814,12 @@
     }
     renderCharacterGrid();
     updateStatusChips();
+
+    // On mobile, auto-center selected card in horizontal carousel
+    var activeCard = document.querySelector('.char-card-v2[data-id="' + charId + '"]');
+    if (activeCard && activeCard.scrollIntoView) {
+      activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
   }
 
   function updateDetailPanel(charId, playerNum) {

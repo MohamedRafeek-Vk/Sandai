@@ -151,7 +151,7 @@
     var btnJump = document.createElement('button');
     btnJump.className = 'touch-btn btn-touch-jump btn-dpad-up';
     btnJump.dataset.action = 'jump';
-    btnJump.textContent = '▲';
+    btnJump.innerHTML = '<span class="touch-icon">▲</span><span class="touch-lbl">JUMP</span>';
     btnJump.setAttribute('type', 'button');
     btnJump.setAttribute('aria-label', 'Jump');
     leftPanel.appendChild(btnJump);
@@ -160,7 +160,7 @@
     var btnLeft = document.createElement('button');
     btnLeft.className = 'touch-btn btn-touch-move btn-touch-left btn-dpad-left';
     btnLeft.dataset.action = 'left';
-    btnLeft.textContent = '◀';
+    btnLeft.innerHTML = '<span class="touch-icon">◀</span><span class="touch-lbl">LEFT</span>';
     btnLeft.setAttribute('type', 'button');
     btnLeft.setAttribute('aria-label', 'Move Left');
     leftPanel.appendChild(btnLeft);
@@ -169,7 +169,7 @@
     var btnRight = document.createElement('button');
     btnRight.className = 'touch-btn btn-touch-move btn-touch-right btn-dpad-right';
     btnRight.dataset.action = 'right';
-    btnRight.textContent = '▶';
+    btnRight.innerHTML = '<span class="touch-icon">▶</span><span class="touch-lbl">RIGHT</span>';
     btnRight.setAttribute('type', 'button');
     btnRight.setAttribute('aria-label', 'Move Right');
     leftPanel.appendChild(btnRight);
@@ -178,7 +178,7 @@
     var btnCrouch = document.createElement('button');
     btnCrouch.className = 'touch-btn btn-touch-crouch btn-dpad-down';
     btnCrouch.dataset.action = 'crouch';
-    btnCrouch.textContent = '▼';
+    btnCrouch.innerHTML = '<span class="touch-icon">▼</span><span class="touch-lbl">CROUCH</span>';
     btnCrouch.setAttribute('type', 'button');
     btnCrouch.setAttribute('aria-label', 'Crouch');
     leftPanel.appendChild(btnCrouch);
@@ -196,15 +196,15 @@
     var btnBlock = document.createElement('button');
     btnBlock.className = 'touch-btn btn-touch-block';
     btnBlock.dataset.action = 'block';
-    btnBlock.textContent = '🛡️';
+    btnBlock.innerHTML = '<span class="touch-icon">🛡️</span><span class="touch-lbl">GUARD</span>';
     btnBlock.setAttribute('type', 'button');
-    btnBlock.setAttribute('aria-label', 'Block');
+    btnBlock.setAttribute('aria-label', 'Block Guard');
     topRow.appendChild(btnBlock);
 
     var btnSpecial = document.createElement('button');
     btnSpecial.className = 'touch-btn btn-touch-special';
     btnSpecial.dataset.action = 'special';
-    btnSpecial.textContent = '⚡';
+    btnSpecial.innerHTML = '<span class="touch-icon">⚡</span><span class="touch-lbl">SUPER</span>';
     btnSpecial.setAttribute('type', 'button');
     btnSpecial.setAttribute('aria-label', 'Special Attack');
     topRow.appendChild(btnSpecial);
@@ -218,7 +218,7 @@
     var btnDodge = document.createElement('button');
     btnDodge.className = 'touch-btn btn-touch-dodge';
     btnDodge.dataset.action = 'dodge';
-    btnDodge.textContent = '💨';
+    btnDodge.innerHTML = '<span class="touch-icon">💨</span><span class="touch-lbl">DODGE</span>';
     btnDodge.setAttribute('type', 'button');
     btnDodge.setAttribute('aria-label', 'Dodge Evasion');
     bottomRow.appendChild(btnDodge);
@@ -226,7 +226,7 @@
     var btnPunch = document.createElement('button');
     btnPunch.className = 'touch-btn btn-touch-punch';
     btnPunch.dataset.action = 'punch';
-    btnPunch.textContent = '👊';
+    btnPunch.innerHTML = '<span class="touch-icon">👊</span><span class="touch-lbl">PUNCH</span>';
     btnPunch.setAttribute('type', 'button');
     btnPunch.setAttribute('aria-label', 'Punch Light Attack');
     bottomRow.appendChild(btnPunch);
@@ -234,7 +234,7 @@
     var btnKick = document.createElement('button');
     btnKick.className = 'touch-btn btn-touch-kick';
     btnKick.dataset.action = 'kick';
-    btnKick.textContent = '🦶';
+    btnKick.innerHTML = '<span class="touch-icon">🦶</span><span class="touch-lbl">KICK</span>';
     btnKick.setAttribute('type', 'button');
     btnKick.setAttribute('aria-label', 'Kick Heavy Attack');
     bottomRow.appendChild(btnKick);
@@ -259,11 +259,17 @@
     arena.appendChild(touchContainer);
   }
 
-  function getButtonFromPoint(x, y) {
-    var el = document.elementFromPoint(x, y);
-    while (el && el !== touchContainer) {
-      if (el.dataset && el.dataset.action) return el;
-      el = el.parentElement;
+  function getButtonFromPoint(x, y, fallbackTarget) {
+    if (fallbackTarget && fallbackTarget.closest) {
+      var match = fallbackTarget.closest('[data-action]');
+      if (match) return match;
+    }
+    if (typeof x === 'number' && typeof y === 'number' && (x > 0 || y > 0)) {
+      var el = document.elementFromPoint(x, y);
+      if (el && el.closest) {
+        var m = el.closest('[data-action]');
+        if (m) return m;
+      }
     }
     return null;
   }
@@ -288,11 +294,14 @@
     e.preventDefault();
     for (var i = 0; i < e.changedTouches.length; i++) {
       var touch = e.changedTouches[i];
-      var btn = getButtonFromPoint(touch.clientX, touch.clientY);
+      var btn = getButtonFromPoint(touch.clientX, touch.clientY, touch.target);
       if (btn) {
         var action = btn.dataset.action;
-        touchIds['t_' + touch.identifier] = action;
-        triggerActionDown(action, btn);
+        var key = 't_' + touch.identifier;
+        if (!touchIds[key]) {
+          touchIds[key] = action;
+          triggerActionDown(action, btn);
+        }
       }
     }
   }
@@ -301,7 +310,7 @@
     e.preventDefault();
     for (var i = 0; i < e.changedTouches.length; i++) {
       var touch = e.changedTouches[i];
-      var btn = getButtonFromPoint(touch.clientX, touch.clientY);
+      var btn = getButtonFromPoint(touch.clientX, touch.clientY, touch.target);
       var idKey = 't_' + touch.identifier;
       var prevAction = touchIds[idKey];
 
@@ -338,22 +347,22 @@
 
   // Pointer event support for non-touch / stylus / pointer devices
   function onPointerDown(e) {
-    if (e.pointerType === 'touch') return; // Handled by touch events
-    e.preventDefault();
-    var btn = getButtonFromPoint(e.clientX, e.clientY);
+    var btn = getButtonFromPoint(e.clientX, e.clientY, e.target);
     if (btn) {
+      e.preventDefault();
       var action = btn.dataset.action;
-      touchIds['p_' + e.pointerId] = action;
-      triggerActionDown(action, btn);
+      var idKey = 'p_' + e.pointerId;
+      if (!touchIds[idKey]) {
+        touchIds[idKey] = action;
+        triggerActionDown(action, btn);
+      }
     }
   }
 
   function onPointerMove(e) {
-    if (e.pointerType === 'touch') return;
     var idKey = 'p_' + e.pointerId;
     if (!touchIds[idKey]) return;
-    e.preventDefault();
-    var btn = getButtonFromPoint(e.clientX, e.clientY);
+    var btn = getButtonFromPoint(e.clientX, e.clientY, e.target);
     var prevAction = touchIds[idKey];
     if (btn) {
       var newAction = btn.dataset.action;
@@ -371,7 +380,6 @@
   }
 
   function onPointerUp(e) {
-    if (e.pointerType === 'touch') return;
     var idKey = 'p_' + e.pointerId;
     var action = touchIds[idKey];
     if (action) {
@@ -397,6 +405,27 @@
     }
     touchIds = {};
   }
+
+  // ── Complete Reset of All Combat Inputs (Eliminate Stuck Keys on Tab Switch / Blur) ──
+  function resetAllInputs() {
+    for (var k in inputState.p1) inputState.p1[k] = false;
+    for (var k in inputState.p2) inputState.p2[k] = false;
+    for (var k in inputPressed.p1) inputPressed.p1[k] = false;
+    for (var k in inputPressed.p2) inputPressed.p2[k] = false;
+    touchIds = {};
+    if (touchContainer) {
+      var pressed = touchContainer.querySelectorAll('.touch-pressed');
+      for (var i = 0; i < pressed.length; i++) {
+        pressed[i].classList.remove('touch-pressed');
+      }
+    }
+  }
+
+  window.addEventListener('blur', resetAllInputs);
+  window.addEventListener('orientationchange', resetAllInputs);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) resetAllInputs();
+  });
 
   // ── Public Input Readers ───────────────────────────────────
   function getP1Input() {
@@ -465,15 +494,26 @@
 
   function checkOrientation() {
     var promptEl = document.getElementById('landscape-prompt');
-    if (!promptEl || rotateDismissed) return;
+    if (!promptEl) return;
 
-    var isMobile = (window.SANDAI.deviceType === 'mobile') || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    var isMobile = (window.SANDAI && window.SANDAI.deviceType === 'mobile') ||
+      /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+
     var isPortrait = window.innerHeight > window.innerWidth;
+    var inFight = document.body.classList.contains('in-fight') || (window.SANDAI && window.SANDAI.currentScreen === 'game');
 
-    if (isMobile && isPortrait) {
+    if (!isPortrait) {
+      // Rotated to landscape: reset dismissal for future fights
+      rotateDismissed = false;
+    }
+
+    if (isMobile && isPortrait && inFight && !rotateDismissed) {
       promptEl.classList.remove('hidden');
+      promptEl.style.display = 'flex';
     } else {
       promptEl.classList.add('hidden');
+      promptEl.style.display = 'none';
     }
   }
 
@@ -522,7 +562,10 @@
     inputState: inputState,
     resetAllInputs: resetAllInputs,
     toggleFullscreen: toggleFullscreen,
-    initMobileOptimizations: initMobileOptimizations
+    initMobileOptimizations: initMobileOptimizations,
+    checkOrientation: checkOrientation,
+    triggerActionDown: triggerActionDown,
+    triggerActionUp: triggerActionUp
   };
 
 })();

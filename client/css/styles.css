@@ -2808,30 +2808,755 @@ button {
 /* ==========================================================================
    MOBILE RESPONSIVENESS & LANDSCAPE OPTIMIZATIONS
    ========================================================================== */
-@media (max-width: 900px) {
-  .home-arcade-stage {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding: 1.5rem;
-  }
-  .word-sandai { font-size: 4.5rem; }
-  .hero-character-stage { height: 260px; }
-  .charselect-stage-grid {
-    grid-template-columns: 1fr;
-    overflow-y: auto;
-  }
-  .char-grid-arcade { grid-template-columns: repeat(4, 1fr); }
-  .arena-panoramic-grid { grid-template-columns: repeat(2, 1fr); }
-  .mode-grid-arcade { grid-template-columns: 1fr 1fr; }
-  .device-cards-arcade { grid-template-columns: 1fr; }
-}
+/* ==========================================================================
+   DEDICATED MOBILE & TABLET RESPONSIVE SYSTEM
+   Complete Mobile Optimization: Home, Mode, Character Select, Arena, Lobby, HUD
+   ========================================================================== */
 
-@media (max-width: 600px) {
-  .char-grid-arcade { grid-template-columns: repeat(2, 1fr); }
-  .arena-panoramic-grid { grid-template-columns: 1fr; }
-  .word-sandai { font-size: 3.5rem; }
-  .btn-hero-start { font-size: 1.4rem; height: 52px; }
-  .vs-layout-v2 { flex-direction: column; gap: 1rem; }
+/* Universal Mobile Base Rules */
+@media screen and (max-width: 900px), (hover: none) and (pointer: coarse) {
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
+
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    min-height: -webkit-fill-available;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .screen {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box;
+  }
+
+  /* Universal Mobile Back Button & Header Clearance */
+  .btn-back {
+    top: calc(10px + var(--safe-top)) !important;
+    left: calc(10px + var(--safe-left)) !important;
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 1.25rem !important;
+    z-index: 60 !important;
+  }
+
+  .charselect-header-arcade,
+  .lobby-header-bar {
+    padding-left: calc(52px + var(--safe-left)) !important;
+    padding-right: calc(52px + var(--safe-right)) !important;
+  }
+
+  /* ── 1. MAIN MENU (Mobile Dedicated Layout) ── */
+  .screen-home-arcade {
+    padding: calc(10px + var(--safe-top)) 1rem calc(16px + var(--safe-bottom)) 1rem !important;
+    overflow-y: auto !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+  }
+
+  .home-arcade-stage {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.2rem !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .home-stage-left {
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 1.2rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .home-primary-action-wrap {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .logo-hero-group {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .logo-sandai-massive {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.1rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .word-sandai {
+    font-size: clamp(2.4rem, 10vw, 3.8rem) !important;
+    line-height: 0.95 !important;
+    max-width: 100% !important;
+  }
+
+  .word-edition {
+    font-size: clamp(1.2rem, 5vw, 1.8rem) !important;
+    transform: none !important;
+  }
+
+  .tagline-arcade {
+    font-size: 0.82rem !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.4 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .btn-hero-start {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 52px !important;
+    font-size: 1.25rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .home-nav-rail {
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 0.6rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .nav-slats-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 0.6rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .nav-slat {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.8rem 1rem !important;
+    min-height: 52px !important;
+    box-sizing: border-box !important;
+  }
+
+  .slat-index {
+    font-size: 1.3rem !important;
+    margin-right: 0.8rem !important;
+  }
+
+  .slat-title {
+    font-size: 1.05rem !important;
+  }
+
+  .slat-desc {
+    font-size: 0.72rem !important;
+  }
+
+  .hero-character-stage,
+  .home-stage-right {
+    display: none !important;
+  }
+
+  .home-top-bar {
+    padding: calc(6px + var(--safe-top)) 0.5rem 0 0.5rem !important;
+  }
+
+  .circuit-tag {
+    font-size: 0.72rem !important;
+  }
+
+  .btn-system-settings {
+    padding: 6px 12px !important;
+    font-size: 0.78rem !important;
+  }
+
+  /* ── 2. GAME MODE SELECT (Mobile Layout) ── */
+  .screen-mode-arcade {
+    padding: calc(10px + var(--safe-top)) 0.75rem calc(16px + var(--safe-bottom)) 0.75rem !important;
+    overflow-y: auto !important;
+  }
+
+  .mode-header {
+    padding: 0 calc(48px + var(--safe-right)) 0 calc(48px + var(--safe-left)) !important;
+    margin-bottom: 1.2rem !important;
+    text-align: center !important;
+  }
+
+  .mode-header .heading {
+    font-size: 1.6rem !important;
+    margin: 0 !important;
+  }
+
+  .mode-header .screen-header-tag {
+    font-size: 0.75rem !important;
+  }
+
+  .mode-grid-arcade {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+    max-width: 500px !important;
+  }
+
+  .mode-card-arcade {
+    padding: 1.1rem 0.75rem !important;
+    min-height: 135px !important;
+  }
+
+  .mode-icon-v2 {
+    font-size: 1.8rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .mode-card-title {
+    font-size: 1.05rem !important;
+  }
+
+  .mode-card-desc {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* ── 3. CHARACTER SELECT (Mobile Full Single-Screen Layout) ── */
+  .screen-charselect-arcade {
+    padding: 0 !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .charselect-container-arcade {
+    height: 100% !important;
+    max-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: calc(6px + var(--safe-top)) 0.5rem calc(8px + var(--safe-bottom)) 0.5rem !important;
+    box-sizing: border-box;
+    overflow: hidden !important;
+  }
+
+  .charselect-header-arcade {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 4px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .charselect-title-group {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .heading-charselect {
+    font-size: 1.25rem !important;
+    margin: 2px 0 0 0 !important;
+  }
+
+  .selection-step-indicator {
+    font-size: 0.7rem !important;
+    gap: 4px !important;
+  }
+
+  .step-pill {
+    padding: 2px 6px !important;
+  }
+
+  .btn-random-pick {
+    position: static !important;
+    height: 36px !important;
+    padding: 0 0.65rem !important;
+    font-size: 0.72rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .charselect-stage-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+    gap: 4px !important;
+    margin: 0 !important;
+  }
+
+  .char-detail-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 0 !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .preview-showcase-container {
+    height: min(28vh, 180px) !important;
+    width: 100% !important;
+    max-width: 280px !important;
+    position: relative !important;
+    margin: 0 auto !important;
+  }
+
+  .preview-3d-frame,
+  .preview-portrait-frame {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 8px !important;
+  }
+
+  .preview-toggle-bar {
+    bottom: 4px !important;
+    gap: 4px !important;
+  }
+
+  .btn-preview-toggle {
+    padding: 2px 8px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .detail-header-info {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin: 2px 0 !important;
+  }
+
+  .detail-name {
+    font-size: 1.4rem !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+  }
+
+  .detail-tags {
+    display: flex !important;
+    gap: 4px !important;
+  }
+
+  .detail-style {
+    font-size: 0.68rem !important;
+    padding: 2px 6px !important;
+  }
+
+  .detail-archetype {
+    font-size: 0.62rem !important;
+    padding: 2px 5px !important;
+  }
+
+  .detail-stats-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2px 10px !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    padding: 0 8px !important;
+  }
+
+  .detail-stat-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+
+  .stat-lbl {
+    font-size: 0.62rem !important;
+    width: 42px !important;
+  }
+
+  .stat-track {
+    height: 5px !important;
+    flex: 1 !important;
+  }
+
+  .stat-val {
+    font-size: 0.62rem !important;
+    width: 14px !important;
+  }
+
+  .detail-ability-card {
+    display: none !important;
+  }
+
+  .char-roster-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    margin-top: auto !important;
+    padding: 0 !important;
+  }
+
+  .roster-panel-header {
+    display: none !important;
+  }
+
+  /* Horizontal Swipeable Roster Carousel */
+  .char-grid-arcade {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 8px !important;
+    padding: 4px 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    scrollbar-width: none !important;
+  }
+
+  .char-grid-arcade::-webkit-scrollbar {
+    display: none;
+  }
+
+  .char-card-v2 {
+    flex: 0 0 70px !important;
+    height: 86px !important;
+    scroll-snap-align: center !important;
+    padding: 4px !important;
+    border-radius: 8px !important;
+    box-sizing: border-box;
+  }
+
+  .card-portrait-wrap {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    margin: 0 auto !important;
+  }
+
+  .card-name {
+    font-size: 0.7rem !important;
+    margin-top: 3px !important;
+    text-align: center !important;
+  }
+
+  .card-style {
+    display: none !important;
+  }
+
+  .charselect-footer {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    padding: 4px 6px !important;
+    gap: 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .selection-status-chips {
+    display: flex !important;
+    justify-content: space-around !important;
+    width: 100% !important;
+    margin-bottom: 2px !important;
+  }
+
+  .status-chip {
+    padding: 2px 8px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .btn-confirm-fighter {
+    width: 100% !important;
+    height: 46px !important;
+    font-size: 1.1rem !important;
+    border-radius: 8px !important;
+  }
+
+  /* ── 4. STAGE / ARENA SELECT (Mobile Swipe Carousel) ── */
+  .screen-arenaselect-arcade {
+    padding: calc(8px + var(--safe-top)) 0.5rem calc(10px + var(--safe-bottom)) 0.5rem !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .arenaselect-layout {
+    height: 100% !important;
+    max-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .arenaselect-layout .heading-arcade {
+    font-size: 1.45rem !important;
+    padding: 0 calc(48px + var(--safe-right)) 0 calc(48px + var(--safe-left)) !important;
+    text-align: center !important;
+    margin: 2px 0 !important;
+  }
+
+  .arenaselect-layout .select-prompt {
+    font-size: 0.78rem !important;
+    text-align: center !important;
+    margin-bottom: 6px !important;
+  }
+
+  .arenaselect-layout .screen-header-tag {
+    font-size: 0.7rem !important;
+    text-align: center !important;
+  }
+
+  .arena-panoramic-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 12px !important;
+    padding: 8px 12px !important;
+    width: 100% !important;
+    flex: 1 !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+    scrollbar-width: none !important;
+  }
+
+  .arena-panoramic-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .arena-panoramic-grid .arena-card,
+  .arena-card-panoramic {
+    flex: 0 0 78vw !important;
+    max-width: 310px !important;
+    height: min(42vh, 250px) !important;
+    scroll-snap-align: center !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .arena-panoramic-grid .arena-card .arena-thumb {
+    height: 110px !important;
+  }
+
+  .arena-panoramic-grid .arena-card .arena-info {
+    padding: 0.6rem 0.8rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .arena-panoramic-grid .arena-card .arena-badge {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .btn-enter-battle {
+    width: 100% !important;
+    height: 50px !important;
+    font-size: 1.2rem !important;
+    border-radius: 8px !important;
+    margin-top: 6px !important;
+  }
+
+  /* ── 5. CUSTOM ROOM LOBBY (Mobile Layout) ── */
+  .screen-lobby-arcade {
+    padding: calc(8px + var(--safe-top)) 0.5rem calc(10px + var(--safe-bottom)) 0.5rem !important;
+    overflow-y: auto !important;
+  }
+
+  .lobby-header-bar {
+    margin-bottom: 0.8rem !important;
+  }
+
+  .lobby-title {
+    font-size: 1.25rem !important;
+  }
+
+  .connection-status {
+    font-size: 0.75rem !important;
+  }
+
+  .lobby-code-banner {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+
+  .code-text {
+    font-size: 1.5rem !important;
+  }
+
+  .btn-lobby-action {
+    padding: 6px 10px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .lobby-slots-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .lobby-player-slot {
+    padding: 8px 6px !important;
+    min-height: 160px !important;
+  }
+
+  .slot-portrait-frame {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .slot-name {
+    font-size: 0.95rem !important;
+    margin: 2px 0 !important;
+  }
+
+  .slot-style {
+    font-size: 0.65rem !important;
+  }
+
+  .slot-ready-status {
+    font-size: 0.68rem !important;
+    padding: 2px 5px !important;
+  }
+
+  .btn-slot-change {
+    font-size: 0.65rem !important;
+    padding: 3px 6px !important;
+  }
+
+  .arena-selector-section {
+    padding: 6px !important;
+  }
+
+  .lobby-arena-pill {
+    padding: 4px 8px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .btn-start-match,
+  .btn-lobby-ready {
+    height: 48px !important;
+    font-size: 1.05rem !important;
+    width: 100% !important;
+  }
+
+  /* ── 6. COMBAT SCREEN TOP ACTIONS (Repositioned to Top Center) ── */
+  .arena-top-actions {
+    top: calc(8px + var(--safe-top)) !important;
+    left: calc(50% + 56px) !important;
+    right: auto !important;
+    transform: none !important;
+    z-index: 110 !important;
+  }
+
+  .btn-arena-action {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* ── 7. MOBILE TOUCH CONTROLS (Ergonomic Circular Gaming Buttons) ── */
+  .touch-controls-layer {
+    touch-action: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+  }
+
+  .touch-panel-left {
+    bottom: calc(10px + var(--safe-bottom)) !important;
+    left: calc(10px + var(--safe-left)) !important;
+    grid-template-columns: repeat(3, 58px) !important;
+    grid-template-rows: repeat(3, 58px) !important;
+    gap: 4px !important;
+  }
+
+  .touch-panel-right {
+    bottom: calc(10px + var(--safe-bottom)) !important;
+    right: calc(10px + var(--safe-right)) !important;
+    gap: 8px !important;
+  }
+
+  .touch-row-top,
+  .touch-row-bottom {
+    gap: 8px !important;
+  }
+
+  .touch-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 1px !important;
+    background: rgba(8, 16, 36, 0.78) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65), inset 0 0 10px rgba(0, 229, 255, 0.15) !important;
+    touch-action: none !important;
+    user-select: none !important;
+  }
+
+  .touch-icon {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+    pointer-events: none;
+  }
+
+  .touch-lbl {
+    font-family: var(--font-heading) !important;
+    font-size: 0.52rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    opacity: 0.85 !important;
+    text-transform: uppercase !important;
+    pointer-events: none;
+    line-height: 1 !important;
+  }
+
+  .touch-btn:active,
+  .touch-btn.touch-pressed {
+    transform: scale(0.90) !important;
+    box-shadow: 0 0 25px currentColor !important;
+  }
+
+  .btn-touch-punch   { border-color: var(--neon-cyan) !important; color: var(--neon-cyan) !important; width: 62px !important; height: 62px !important; }
+  .btn-touch-kick    { border-color: var(--blaze-orange) !important; color: var(--blaze-orange) !important; width: 62px !important; height: 62px !important; }
+  .btn-touch-special { border-color: #ffd700 !important; color: #ffd700 !important; width: 56px !important; height: 56px !important; }
+  .btn-touch-block   { border-color: #7c4dff !important; color: #7c4dff !important; width: 56px !important; height: 56px !important; }
+  .btn-touch-dodge   { border-color: #e040fb !important; color: #e040fb !important; width: 56px !important; height: 56px !important; }
+  .btn-touch-jump    { border-color: #00ff88 !important; color: #00ff88 !important; width: 58px !important; height: 58px !important; }
+  .btn-touch-crouch  { border-color: #00e5ff !important; color: #00e5ff !important; width: 58px !important; height: 58px !important; }
+  .btn-touch-move    { border-color: #00e5ff !important; color: #00e5ff !important; width: 58px !important; height: 58px !important; }
+
+  /* ── 8. CONTROLS GUIDE (Mobile Layout) ── */
+  .screen-guide-arcade {
+    padding: calc(10px + var(--safe-top)) 0.75rem calc(16px + var(--safe-bottom)) 0.75rem !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .controls-guide-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .controls-player-card {
+    width: 100% !important;
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .btn-start-fight-guide {
+    width: 100% !important;
+    height: 50px !important;
+    font-size: 1.2rem !important;
+  }
 }
 
 /* ==========================================================================

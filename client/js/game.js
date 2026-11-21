@@ -774,44 +774,54 @@
 
       var p1Data = window.SANDAI.CHARACTERS[this.p1CharId] || window.SANDAI.CHARACTERS[0];
       var p2Data = window.SANDAI.CHARACTERS[this.p2CharId] || window.SANDAI.CHARACTERS[1];
+      var isMobile = (window.SANDAI && window.SANDAI.deviceType === 'mobile') || W < 950;
+
+      var p1PortX = isMobile ? 36 : 55;
+      var p1PortY = isMobile ? 44 : 52;
+      var portSize = isMobile ? 50 : 64;
+      var p1TextX = isMobile ? 68 : 95;
+
+      var p2PortX = W - (isMobile ? 36 : 55);
+      var p2PortY = isMobile ? 44 : 52;
+      var p2TextX = W - (isMobile ? 68 : 95);
 
       // P1 Portrait & Angled Frame
       if (this.textures.exists('portrait_' + p1Data.name)) {
-        this.add.image(55, 52, 'portrait_' + p1Data.name).setDisplaySize(64, 64).setDepth(101);
+        this.add.image(p1PortX, p1PortY, 'portrait_' + p1Data.name).setDisplaySize(portSize, portSize).setDepth(101);
       }
       // Strict Name Purity: Plain original character name only!
-      this.p1NameText = this.add.text(95, 24, p1Data.name.toUpperCase(), {
+      this.p1NameText = this.add.text(p1TextX, isMobile ? 18 : 24, p1Data.name.toUpperCase(), {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '26px',
+        fontSize: isMobile ? '20px' : '26px',
         fontWeight: '700',
         color: '#ffffff'
       }).setDepth(101);
-      this.p1StyleText = this.add.text(95, 52, p1Data.style, {
+      this.p1StyleText = this.add.text(p1TextX, isMobile ? 42 : 52, p1Data.style, {
         fontFamily: 'Inter, sans-serif',
-        fontSize: '11px',
+        fontSize: isMobile ? '10px' : '11px',
         color: '#00f0ff'
       }).setDepth(101);
 
       // P2 Portrait & Angled Frame
       if (this.textures.exists('portrait_' + p2Data.name)) {
-        this.add.image(W - 55, 52, 'portrait_' + p2Data.name).setDisplaySize(64, 64).setDepth(101);
+        this.add.image(p2PortX, p2PortY, 'portrait_' + p2Data.name).setDisplaySize(portSize, portSize).setDepth(101);
       }
-      this.p2NameText = this.add.text(W - 95, 24, p2Data.name.toUpperCase(), {
+      this.p2NameText = this.add.text(p2TextX, isMobile ? 18 : 24, p2Data.name.toUpperCase(), {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '26px',
+        fontSize: isMobile ? '20px' : '26px',
         fontWeight: '700',
         color: '#ffffff'
       }).setOrigin(1, 0).setDepth(101);
-      this.p2StyleText = this.add.text(W - 95, 52, p2Data.style, {
+      this.p2StyleText = this.add.text(p2TextX, isMobile ? 42 : 52, p2Data.style, {
         fontFamily: 'Inter, sans-serif',
-        fontSize: '11px',
+        fontSize: isMobile ? '10px' : '11px',
         color: '#ff1744'
       }).setOrigin(1, 0).setDepth(101);
 
       // Central Hexagonal Timer Display
-      this.timerText = this.add.text(W / 2, 48, this.isTraining ? '∞' : '99', {
+      this.timerText = this.add.text(W / 2, isMobile ? 42 : 48, this.isTraining ? '∞' : '99', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '48px',
+        fontSize: isMobile ? '38px' : '48px',
         fontWeight: 'bold',
         color: '#ffffff'
       }).setOrigin(0.5).setDepth(102);
@@ -819,42 +829,42 @@
       // Round & Match Announcement Text (Centered)
       this.announcementText = this.add.text(W / 2, H / 2 - 60, '', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '76px',
+        fontSize: isMobile ? '52px' : '76px',
         fontWeight: 'bold',
         color: '#ffd700',
         stroke: '#000000',
-        strokeThickness: 8
+        strokeThickness: isMobile ? 6 : 8
       }).setOrigin(0.5).setDepth(200);
 
       // Combo Texts with dynamic damage badge
-      this.p1ComboText = this.add.text(120, 175, '', {
+      this.p1ComboText = this.add.text(isMobile ? 70 : 120, isMobile ? 140 : 175, '', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '34px',
+        fontSize: isMobile ? '26px' : '34px',
         fontWeight: 'bold',
         color: '#ff6b35'
       }).setDepth(101);
 
-      this.p2ComboText = this.add.text(W - 120, 175, '', {
+      this.p2ComboText = this.add.text(W - (isMobile ? 70 : 120), isMobile ? 140 : 175, '', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '34px',
+        fontSize: isMobile ? '26px' : '34px',
         fontWeight: 'bold',
         color: '#ff6b35'
       }).setOrigin(1, 0).setDepth(101);
 
       // Bottom Super Energy Meter Banner Texts
-      this.p1SuperText = this.add.text(95, H - 54, 'ENERGY: 0%', {
+      this.p1SuperText = this.add.text(isMobile ? (W / 2 - 95) : 95, isMobile ? (H - 42) : (H - 54), 'ENERGY: 0%', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '13px',
+        fontSize: isMobile ? '11px' : '13px',
         fontWeight: '700',
         color: '#00f0ff'
-      }).setDepth(101);
+      }).setOrigin(isMobile ? 0.5 : 0, 0).setDepth(101);
 
-      this.p2SuperText = this.add.text(W - 95, H - 54, 'ENERGY: 0%', {
+      this.p2SuperText = this.add.text(isMobile ? (W / 2 + 95) : (W - 95), isMobile ? (H - 42) : (H - 54), 'ENERGY: 0%', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '13px',
+        fontSize: isMobile ? '11px' : '13px',
         fontWeight: '700',
         color: '#ff1744'
-      }).setOrigin(1, 0).setDepth(101);
+      }).setOrigin(isMobile ? 0.5 : 1, 0).setDepth(101);
 
       // Training Mode Telemetry & Input History Overlays
       if (this.isTraining) {
@@ -894,11 +904,14 @@
       }
 
       // Health Bar Dimensions (Tekken 8 / MK11 angled look)
-      var barW = 450;
-      var barH = 26;
-      var barY = 72;
-      var p1BarX = 95;
-      var p2BarX = W - 95 - barW;
+      var isMobile = (window.SANDAI && window.SANDAI.deviceType === 'mobile') || W < 950;
+      var p1BarX = isMobile ? 68 : 95;
+      var timerGap = isMobile ? 80 : 120;
+      var maxHalf = (W / 2) - p1BarX - (timerGap / 2);
+      var barW = Math.min(450, Math.max(160, maxHalf));
+      var barH = isMobile ? 22 : 26;
+      var barY = isMobile ? 60 : 72;
+      var p2BarX = W - p1BarX - barW;
 
       // ── P1 HEALTH BAR ──
       // Background bar with metallic border
@@ -991,27 +1004,35 @@
       }
 
       // ── BOTTOM SUPER ENERGY GAUGES (0-100% with Special Ready Glow) ──
-      var gaugeW = 320;
-      var gaugeH = 16;
-      var gaugeY = H - 36;
+      var gaugeW = isMobile ? Math.min(180, (W / 2) - 45) : Math.min(320, barW);
+      var gaugeH = isMobile ? 12 : 16;
+      var gaugeY = isMobile ? (H - 26) : (H - 36);
+
+      var p1GaugeX = isMobile ? ((W / 2) - gaugeW - 12) : p1BarX;
+      var p2GaugeX = isMobile ? ((W / 2) + 12) : (p2BarX + barW - gaugeW);
 
       // P1 Super Gauge (Left)
       var p1Energy = Math.max(0, Math.min(100, this.fighter1.energy || 0));
       g.fillStyle(0x0e1018, 0.9);
-      g.fillRoundedRect(p1BarX, gaugeY, gaugeW, gaugeH, 3);
+      g.fillRoundedRect(p1GaugeX, gaugeY, gaugeW, gaugeH, 3);
       g.lineStyle(2, p1Energy >= 50 ? 0xffd700 : 0x00f0ff, 0.85);
-      g.strokeRoundedRect(p1BarX, gaugeY, gaugeW, gaugeH, 3);
+      g.strokeRoundedRect(p1GaugeX, gaugeY, gaugeW, gaugeH, 3);
 
       var p1EnergyFillW = gaugeW * (p1Energy / 100);
       if (p1EnergyFillW > 0) {
         g.fillStyle(p1Energy >= 50 ? 0xffd700 : 0x00e5ff, 1);
-        g.fillRoundedRect(p1BarX, gaugeY, p1EnergyFillW, gaugeH, 3);
+        g.fillRoundedRect(p1GaugeX, gaugeY, p1EnergyFillW, gaugeH, 3);
       }
       // 50% Threshold Segment Divider
       g.fillStyle(0xffffff, 0.9);
-      g.fillRect(p1BarX + gaugeW * 0.5 - 1, gaugeY, 2, gaugeH);
+      g.fillRect(p1GaugeX + gaugeW * 0.5 - 1, gaugeY, 2, gaugeH);
 
       if (this.p1SuperText) {
+        if (isMobile) {
+          this.p1SuperText.setPosition(p1GaugeX + gaugeW / 2, gaugeY - 14).setOrigin(0.5, 0);
+        } else {
+          this.p1SuperText.setPosition(p1BarX, H - 54).setOrigin(0, 0);
+        }
         if (p1Energy >= 100) {
           this.p1SuperText.setText('★ MAX SPECIAL READY ★').setColor('#ffd700');
         } else if (p1Energy >= 50) {
@@ -1024,19 +1045,24 @@
       // P2 Super Gauge (Right)
       var p2Energy = Math.max(0, Math.min(100, this.fighter2.energy || 0));
       g.fillStyle(0x0e1018, 0.9);
-      g.fillRoundedRect(p2BarX + barW - gaugeW, gaugeY, gaugeW, gaugeH, 3);
+      g.fillRoundedRect(p2GaugeX, gaugeY, gaugeW, gaugeH, 3);
       g.lineStyle(2, p2Energy >= 50 ? 0xffd700 : 0xff1744, 0.85);
-      g.strokeRoundedRect(p2BarX + barW - gaugeW, gaugeY, gaugeW, gaugeH, 3);
+      g.strokeRoundedRect(p2GaugeX, gaugeY, gaugeW, gaugeH, 3);
 
       var p2EnergyFillW = gaugeW * (p2Energy / 100);
       if (p2EnergyFillW > 0) {
         g.fillStyle(p2Energy >= 50 ? 0xffd700 : 0xff1744, 1);
-        g.fillRoundedRect(p2BarX + barW - p2EnergyFillW, gaugeY, p2EnergyFillW, gaugeH, 3);
+        g.fillRoundedRect(p2GaugeX + barW - p2EnergyFillW, gaugeY, p2EnergyFillW, gaugeH, 3);
       }
       g.fillStyle(0xffffff, 0.9);
-      g.fillRect(p2BarX + barW - gaugeW * 0.5 - 1, gaugeY, 2, gaugeH);
+      g.fillRect(p2GaugeX + gaugeW * 0.5 - 1, gaugeY, 2, gaugeH);
 
       if (this.p2SuperText) {
+        if (isMobile) {
+          this.p2SuperText.setPosition(p2GaugeX + gaugeW / 2, gaugeY - 14).setOrigin(0.5, 0);
+        } else {
+          this.p2SuperText.setPosition(p2BarX + barW, H - 54).setOrigin(1, 0);
+        }
         if (p2Energy >= 100) {
           this.p2SuperText.setText('★ MAX SPECIAL READY ★').setColor('#ffd700');
         } else if (p2Energy >= 50) {
