@@ -1030,6 +1030,7 @@
 
       actions['special'] = actions['Spell_Simple_Shoot'];
       actions['block'] = actions['Crouch_Idle_Loop'];
+      actions['crouch'] = actions['Crouch_Idle_Loop'];
       actions['dodge'] = actions['Roll'];
       actions['hit'] = actions['Hit_Chest'];
       actions['hit_head'] = actions['Hit_Head'];
@@ -1252,6 +1253,8 @@
         targetAnim = 'hit';
       } else if (fighterState.isBlocking || fighterState.state === 'block') {
         targetAnim = 'block';
+      } else if (fighterState.isCrouching || fighterState.state === 'crouch') {
+        targetAnim = 'crouch';
       } else if (fighterState.state === 'punch') {
         targetAnim = 'punch';
       } else if (fighterState.state === 'heavy_punch') {

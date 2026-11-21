@@ -229,6 +229,10 @@
     this.facing         = playerIndex === 0 ? 1 : -1;
     this.isJumping      = false;
     this.isBlocking     = false;
+    this.isCrouching    = false;
+    this.isDodging      = false;
+    this.dodgeCooldown  = 0;
+    this.dodgeTimer     = 0;
     this.isAttacking    = false;
     this.attackCooldown = 0;
     this.specialCooldown = 0;
@@ -433,9 +437,46 @@
     }
   };
 
+  Fighter.prototype.crouch = function () {
+    if (this.health <= 0 || this.isJumping || this.isAttacking || this.isGuardBroken || this.hitStunTimer > 0) return;
+    this.isCrouching = true;
+    this.velocityX = 0;
+    this.state = 'crouch';
+    this.playAnim('crouch');
+  };
+
+  Fighter.prototype.stopCrouch = function () {
+    this.isCrouching = false;
+    if (this.state === 'crouch') {
+      this.state = 'idle';
+      this.playAnim('idle');
+    }
+  };
+
+  Fighter.prototype.dodge = function () {
+    if (this.health <= 0 || this.isDodging || this.dodgeCooldown > 0 || this.isAttacking || this.isGuardBroken || this.hitStunTimer > 0) return;
+    this.isDodging = true;
+    this.dodgeTimer = 16;
+    this.dodgeCooldown = 42;
+    this.state = 'dodge';
+    this.velocityX = -this.facing * (4.5 + this.statSpeed * 0.25);
+    this.playAnim('dodge');
+    if (window.SANDAI.Audio && typeof window.SANDAI.Audio.playWhoosh === 'function') {
+      window.SANDAI.Audio.playWhoosh();
+    }
+  };
+
   // ── Damage System (Guard Break, Counter Hits, Block Reduction) ──
   Fighter.prototype.takeDamage = function (amount, isCounter, attackType, attacker) {
     var actual = amount;
+
+    // 0. Check if dodging (evasion invulnerability)
+    if (this.isDodging) {
+      if (this.scene && typeof this.scene.showFloatingBanner === 'function') {
+        this.scene.showFloatingBanner('DODGE!', this.x, this.y - 120, '#00e5ff');
+      }
+      return 0;
+    }
 
     // 1. Check if defending player is blocking
     if (this.isBlocking && !this.isGuardBroken) {
@@ -616,6 +657,20 @@
     // Cooldown timers
     if (this.attackCooldown > 0) this.attackCooldown -= dt;
     if (this.specialCooldown > 0) this.specialCooldown -= dt;
+    if (this.dodgeCooldown > 0) this.dodgeCooldown -= dt;
+
+    // Dodge State Timing
+    if (this.isDodging) {
+      this.dodgeTimer -= dt;
+      if (this.dodgeTimer <= 0) {
+        this.isDodging = false;
+        this.velocityX = 0;
+        if (this.state === 'dodge') {
+          this.state = 'idle';
+          this.playAnim('idle');
+        }
+      }
+    }
 
     // Combo timer
     if (this.comboTimer > 0) {

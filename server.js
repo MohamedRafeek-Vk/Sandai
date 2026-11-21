@@ -204,11 +204,12 @@ io.on('connection', (socket) => {
   });
 
   // ---- create-room ---------------------------------------------------
-  socket.on('create-room', (_, ack) => {
+  socket.on('create-room', (data, ack) => {
     const code = generateRoomCode();
+    const initialCharId = (data && VALID_CHARACTER_IDS.includes(Number(data.characterId))) ? Number(data.characterId) : 0;
     const room = {
       code,
-      players: [{ id: socket.id, characterId: null, ready: false, rematch: false }],
+      players: [{ id: socket.id, characterId: initialCharId, ready: false, rematch: false }],
       arena: 'mountain',
       matchState: 'waiting',
       createdAt: Date.now(),
@@ -217,10 +218,20 @@ io.on('connection', (socket) => {
     rooms.set(code, room);
     socketToRoom.set(socket.id, code);
     socket.join(code);
-    const payload = { code, playerIndex: 0, arena: 'mountain' };
+    const payload = {
+      code,
+      playerIndex: 0,
+      arena: 'mountain',
+      characterId: initialCharId,
+      players: room.players.map((p, idx) => ({
+        playerIndex: idx,
+        characterId: p.characterId,
+        ready: p.ready
+      }))
+    };
     socket.emit('room-created', payload);
     if (typeof ack === 'function') ack(payload);
-    console.log(`[create-room] ${socket.id} → ${code}`);
+    console.log(`[create-room] ${socket.id} → ${code} (characterId: ${initialCharId})`);
   });
 
   // ---- join-room -----------------------------------------------------
@@ -250,7 +261,8 @@ io.on('connection', (socket) => {
     }
 
     const playerIndex = room.players.length;
-    room.players.push({ id: socket.id, characterId: null, ready: false, rematch: false });
+    const initialCharId = (data && VALID_CHARACTER_IDS.includes(Number(data.characterId))) ? Number(data.characterId) : 1;
+    room.players.push({ id: socket.id, characterId: initialCharId, ready: false, rematch: false });
     socketToRoom.set(socket.id, code);
     socket.join(code);
 
@@ -273,10 +285,12 @@ io.on('connection', (socket) => {
     socket.to(code).emit('player-joined', {
       playerIndex,
       playerId: socket.id,
-      arena: room.arena || 'mountain'
+      characterId: initialCharId,
+      arena: room.arena || 'mountain',
+      players: joinPayload.players
     });
     if (typeof ack === 'function') ack(joinPayload);
-    console.log(`[join-room] ${socket.id} → ${code} (player ${playerIndex})`);
+    console.log(`[join-room] ${socket.id} → ${code} (player ${playerIndex}, characterId: ${initialCharId})`);
   });
 
   // ---- select-character ----------------------------------------------
@@ -342,7 +356,17 @@ io.on('connection', (socket) => {
     const allSelected = room.players.length === MAX_PLAYERS_PER_ROOM && room.players.every(p => p.characterId !== null);
     const allReady = allSelected && room.players.every(p => p.ready);
 
-    if (allReady) {
+    io.to(room.code).emit('both-players-ready', {
+      canStart: allReady,
+      allReady: allReady,
+      players: room.players.map((p, idx) => ({
+        playerIndex: idx,
+        characterId: p.characterId,
+        ready: p.ready
+      }))
+    });
+
+    if (allReady && data?.autoStart !== false) {
       room.matchState = 'playing';
       room.players.forEach(p => { p.rematch = false; });
 
@@ -357,6 +381,50 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ---- start-match (Host explicitly launches match when both ready) ----
+  socket.on('start-match', (data, ack) => {
+    const room = getRoom(data?.roomCode);
+    if (!room || !playerInRoom(room, socket.id)) {
+      const err = { error: 'Invalid room' };
+      socket.emit('error-message', err);
+      if (typeof ack === 'function') ack(err);
+      return;
+    }
+
+    const playerIndex = room.players.findIndex(p => p.id === socket.id);
+    if (playerIndex !== 0) {
+      const err = { error: 'Only the room host can start the match.' };
+      socket.emit('error-message', err);
+      if (typeof ack === 'function') ack(err);
+      return;
+    }
+
+    const allSelected = room.players.length === MAX_PLAYERS_PER_ROOM && room.players.every(p => p.characterId !== null);
+    const allReady = allSelected && room.players.every(p => p.ready);
+
+    if (!allReady) {
+      const err = { error: 'Both players must select a fighter and be ready before starting the match.' };
+      socket.emit('error-message', err);
+      if (typeof ack === 'function') ack(err);
+      return;
+    }
+
+    room.matchState = 'playing';
+    room.players.forEach(p => { p.rematch = false; });
+
+    const payload = {
+      arena: room.arena || 'mountain',
+      players: room.players.map((p, i) => ({
+        playerIndex: i,
+        characterId: p.characterId,
+      })),
+    };
+
+    io.to(room.code).emit('match-start', payload);
+    if (typeof ack === 'function') ack({ success: true, ...payload });
+    console.log(`[start-match] Room ${room.code} started by Host`);
+  });
+
   // ---- game-action ---------------------------------------------------
   socket.on('game-action', (data) => {
     if (!rateLimitOk(socket.id)) {
@@ -369,7 +437,10 @@ io.on('connection', (socket) => {
     }
     if (room.matchState !== 'playing') return;
 
-    const validActions = ['moveLeft', 'moveRight', 'jump', 'punch', 'kick', 'special', 'block', 'stopBlock'];
+    const validActions = [
+      'moveLeft', 'moveRight', 'jump', 'punch', 'kick',
+      'special', 'block', 'stopBlock', 'crouch', 'stopCrouch', 'dodge'
+    ];
     if (!validActions.includes(data.action)) return;
 
     const playerIndex = room.players.findIndex(p => p.id === socket.id);
@@ -465,7 +536,14 @@ io.on('connection', (socket) => {
     socketToRoom.delete(socket.id);
     socket.leave(room.code);
 
-    socket.to(room.code).emit('player-left', { playerIndex: leavingIndex });
+    socket.to(room.code).emit('player-left', {
+      playerIndex: leavingIndex,
+      players: room.players.map((p, idx) => ({
+        playerIndex: idx,
+        characterId: p.characterId,
+        ready: p.ready
+      }))
+    });
 
     if (room.players.length === 0 && room.disconnected.size === 0) {
       cleanupRoom(room.code);

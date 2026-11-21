@@ -1212,6 +1212,9 @@
         else if (act === 'special') remoteFighter.special();
         else if (act === 'block') remoteFighter.block();
         else if (act === 'stopBlock') remoteFighter.stopBlocking();
+        else if (act === 'crouch') remoteFighter.crouch();
+        else if (act === 'stopCrouch') remoteFighter.stopCrouch();
+        else if (act === 'dodge') remoteFighter.dodge();
       });
 
       socket.off('game-state');
@@ -1344,6 +1347,9 @@
         if (p1Input.left) { this.fighter1.moveLeft(); this.sendLocalAction('moveLeft'); }
         if (p1Input.right) { this.fighter1.moveRight(); this.sendLocalAction('moveRight'); }
         if (p1Input.jump) { this.fighter1.jump(); this.sendLocalAction('jump'); }
+        if (p1Input.crouch) { this.fighter1.crouch(); this.sendLocalAction('crouch'); }
+        else if (this.fighter1.isCrouching && !p1Input.crouch) { this.fighter1.stopCrouch(); this.sendLocalAction('stopCrouch'); }
+        if (p1Input.dodge) { this.fighter1.dodge(); this.sendLocalAction('dodge'); }
         if (p1Input.punch) { this.fighter1.punch(); this.sendLocalAction('punch'); }
         if (p1Input.kick) { this.fighter1.kick(); this.sendLocalAction('kick'); }
         if (p1Input.special) { this.fighter1.special(); this.sendLocalAction('special'); }
@@ -1377,6 +1383,9 @@
         if (p2Input.left) this.fighter2.moveLeft();
         if (p2Input.right) this.fighter2.moveRight();
         if (p2Input.jump) this.fighter2.jump();
+        if (p2Input.crouch) this.fighter2.crouch();
+        else if (this.fighter2.isCrouching && !p2Input.crouch) this.fighter2.stopCrouch();
+        if (p2Input.dodge) this.fighter2.dodge();
         if (p2Input.punch) this.fighter2.punch();
         if (p2Input.kick) this.fighter2.kick();
         if (p2Input.special) this.fighter2.special();
@@ -1386,6 +1395,9 @@
         if (p1Input.left) { this.fighter2.moveLeft(); this.sendLocalAction('moveLeft'); }
         if (p1Input.right) { this.fighter2.moveRight(); this.sendLocalAction('moveRight'); }
         if (p1Input.jump) { this.fighter2.jump(); this.sendLocalAction('jump'); }
+        if (p1Input.crouch) { this.fighter2.crouch(); this.sendLocalAction('crouch'); }
+        else if (this.fighter2.isCrouching && !p1Input.crouch) { this.fighter2.stopCrouch(); this.sendLocalAction('stopCrouch'); }
+        if (p1Input.dodge) { this.fighter2.dodge(); this.sendLocalAction('dodge'); }
         if (p1Input.punch) { this.fighter2.punch(); this.sendLocalAction('punch'); }
         if (p1Input.kick) { this.fighter2.kick(); this.sendLocalAction('kick'); }
         if (p1Input.special) { this.fighter2.special(); this.sendLocalAction('special'); }

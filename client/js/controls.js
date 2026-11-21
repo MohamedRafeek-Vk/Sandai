@@ -10,28 +10,30 @@
 
   // ── Input State ────────────────────────────────────────────
   var inputState = {
-    p1: { left: false, right: false, jump: false, block: false, punch: false, kick: false, special: false },
-    p2: { left: false, right: false, jump: false, block: false, punch: false, kick: false, special: false }
+    p1: { left: false, right: false, jump: false, crouch: false, block: false, punch: false, kick: false, special: false, dodge: false },
+    p2: { left: false, right: false, jump: false, crouch: false, block: false, punch: false, kick: false, special: false, dodge: false }
   };
 
   // Single-fire actions (cleared each frame after reading)
   var inputPressed = {
-    p1: { punch: false, kick: false, special: false, jump: false },
-    p2: { punch: false, kick: false, special: false, jump: false }
+    p1: { punch: false, kick: false, special: false, jump: false, dodge: false },
+    p2: { punch: false, kick: false, special: false, jump: false, dodge: false }
   };
 
   // ── PC Keyboard Mapping ────────────────────────────────────
   // Player 1:
-  // A/D: Move | W: Jump | S: Block | J: Punch | K: Kick | L: Special
+  // A/D: Move | W: Jump | S: Block | X: Crouch | C / Space: Dodge | J: Punch | K: Kick | L: Special
   var KEY_MAP_P1 = {
-    'a': 'left', 'd': 'right', 'w': 'jump', 's': 'block',
+    'a': 'left', 'd': 'right', 'w': 'jump', 's': 'block', 'x': 'crouch',
+    'c': 'dodge', ' ': 'dodge', 'space': 'dodge',
     'j': 'punch', 'k': 'kick', 'l': 'special'
   };
 
   // Player 2:
-  // Arrows: Move/Jump/Block | 1: Punch | 2: Kick | 3: Special (Supports top row & numpad)
+  // Arrows: Move/Jump/Block | Down: Block/Crouch | 0: Dodge | 1: Punch | 2: Kick | 3: Special
   var KEY_MAP_P2 = {
     'arrowleft': 'left', 'arrowright': 'right', 'arrowup': 'jump', 'arrowdown': 'block',
+    '0': 'dodge', 'digit0': 'dodge', 'numpad0': 'dodge',
     '1': 'punch', 'digit1': 'punch', 'numpad1': 'punch',
     '2': 'kick', 'digit2': 'kick', 'numpad2': 'kick',
     '3': 'special', 'digit3': 'special', 'numpad3': 'special'
@@ -52,7 +54,7 @@
     var actionP1 = KEY_MAP_P1[key] || KEY_MAP_P1[code];
     if (actionP1) {
       inputState.p1[actionP1] = true;
-      if (actionP1 === 'punch' || actionP1 === 'kick' || actionP1 === 'special' || actionP1 === 'jump') {
+      if (actionP1 === 'punch' || actionP1 === 'kick' || actionP1 === 'special' || actionP1 === 'jump' || actionP1 === 'dodge') {
         inputPressed.p1[actionP1] = true;
       }
     }
@@ -61,7 +63,7 @@
     var actionP2 = KEY_MAP_P2[key] || KEY_MAP_P2[code];
     if (actionP2) {
       inputState.p2[actionP2] = true;
-      if (actionP2 === 'punch' || actionP2 === 'kick' || actionP2 === 'special' || actionP2 === 'jump') {
+      if (actionP2 === 'punch' || actionP2 === 'kick' || actionP2 === 'special' || actionP2 === 'jump' || actionP2 === 'dodge') {
         inputPressed.p2[actionP2] = true;
       }
     }
@@ -108,7 +110,7 @@
   function resetAllInputs() {
     keysDown = {};
     touchIds = {};
-    var actions = ['left', 'right', 'jump', 'block', 'punch', 'kick', 'special'];
+    var actions = ['left', 'right', 'jump', 'crouch', 'block', 'punch', 'kick', 'special', 'dodge'];
     for (var i = 0; i < actions.length; i++) {
       inputState.p1[actions[i]] = false;
       inputState.p2[actions[i]] = false;
@@ -130,7 +132,7 @@
   // ── Mobile Touch Multi-Touch Controls ───────────────────────
   var touchContainer = null;
   var touchActive = false;
-  var touchIds = {}; // touch.identifier -> action
+  var touchIds = {}; // identifier -> action
 
   function createTouchControls() {
     if (touchActive) return;
@@ -141,78 +143,116 @@
     touchContainer.id = 'sandai-touch-controls';
     touchContainer.className = 'touch-controls-layer';
 
-    // ── Left Side: Movement Buttons (◀ Left, ▶ Right) ─────────
+    // ── Left Side: D-Pad Movement (Jump ▲, Left ◀, Right ▶, Crouch ▼) ──
     var leftPanel = document.createElement('div');
-    leftPanel.className = 'touch-panel-left';
+    leftPanel.className = 'touch-panel-left touch-dpad-grid';
 
-    var moveButtons = [
-      { action: 'left',  label: '◀', cls: 'btn-touch-move' },
-      { action: 'right', label: '▶', cls: 'btn-touch-move' }
-    ];
+    // Up: Jump
+    var btnJump = document.createElement('button');
+    btnJump.className = 'touch-btn btn-touch-jump btn-dpad-up';
+    btnJump.dataset.action = 'jump';
+    btnJump.textContent = '▲';
+    btnJump.setAttribute('type', 'button');
+    btnJump.setAttribute('aria-label', 'Jump');
+    leftPanel.appendChild(btnJump);
 
-    moveButtons.forEach(function (b) {
-      var btn = document.createElement('button');
-      btn.className = 'touch-btn ' + b.cls;
-      btn.dataset.action = b.action;
-      btn.textContent = b.label;
-      btn.setAttribute('type', 'button');
-      leftPanel.appendChild(btn);
-    });
+    // Left: Move Left
+    var btnLeft = document.createElement('button');
+    btnLeft.className = 'touch-btn btn-touch-move btn-touch-left btn-dpad-left';
+    btnLeft.dataset.action = 'left';
+    btnLeft.textContent = '◀';
+    btnLeft.setAttribute('type', 'button');
+    btnLeft.setAttribute('aria-label', 'Move Left');
+    leftPanel.appendChild(btnLeft);
+
+    // Right: Move Right
+    var btnRight = document.createElement('button');
+    btnRight.className = 'touch-btn btn-touch-move btn-touch-right btn-dpad-right';
+    btnRight.dataset.action = 'right';
+    btnRight.textContent = '▶';
+    btnRight.setAttribute('type', 'button');
+    btnRight.setAttribute('aria-label', 'Move Right');
+    leftPanel.appendChild(btnRight);
+
+    // Down: Crouch
+    var btnCrouch = document.createElement('button');
+    btnCrouch.className = 'touch-btn btn-touch-crouch btn-dpad-down';
+    btnCrouch.dataset.action = 'crouch';
+    btnCrouch.textContent = '▼';
+    btnCrouch.setAttribute('type', 'button');
+    btnCrouch.setAttribute('aria-label', 'Crouch');
+    leftPanel.appendChild(btnCrouch);
 
     touchContainer.appendChild(leftPanel);
 
-    // ── Right Side: Action Buttons (Punch, Kick, Block, Jump, Special)
+    // ── Right Side: Action Buttons (Punch, Kick, Block, Dodge, Special) ──
     var rightPanel = document.createElement('div');
-    rightPanel.className = 'touch-panel-right';
+    rightPanel.className = 'touch-panel-right touch-actions-grid';
 
-    // Top Action Row: Jump (▲), Special (⚡)
+    // Action Row Top: Block (🛡️), Special (⚡)
     var topRow = document.createElement('div');
     topRow.className = 'touch-row-top';
-
-    var btnJump = document.createElement('button');
-    btnJump.className = 'touch-btn btn-touch-jump';
-    btnJump.dataset.action = 'jump';
-    btnJump.textContent = '▲';
-    topRow.appendChild(btnJump);
-
-    var btnSpecial = document.createElement('button');
-    btnSpecial.className = 'touch-btn btn-touch-special';
-    btnSpecial.dataset.action = 'special';
-    btnSpecial.textContent = '⚡';
-    topRow.appendChild(btnSpecial);
-
-    rightPanel.appendChild(topRow);
-
-    // Bottom Action Row: Block (🛡️), Punch (👊), Kick (🦶)
-    var bottomRow = document.createElement('div');
-    bottomRow.className = 'touch-row-bottom';
 
     var btnBlock = document.createElement('button');
     btnBlock.className = 'touch-btn btn-touch-block';
     btnBlock.dataset.action = 'block';
     btnBlock.textContent = '🛡️';
-    bottomRow.appendChild(btnBlock);
+    btnBlock.setAttribute('type', 'button');
+    btnBlock.setAttribute('aria-label', 'Block');
+    topRow.appendChild(btnBlock);
+
+    var btnSpecial = document.createElement('button');
+    btnSpecial.className = 'touch-btn btn-touch-special';
+    btnSpecial.dataset.action = 'special';
+    btnSpecial.textContent = '⚡';
+    btnSpecial.setAttribute('type', 'button');
+    btnSpecial.setAttribute('aria-label', 'Special Attack');
+    topRow.appendChild(btnSpecial);
+
+    rightPanel.appendChild(topRow);
+
+    // Action Row Bottom: Dodge (💨), Punch (👊), Kick (🦶)
+    var bottomRow = document.createElement('div');
+    bottomRow.className = 'touch-row-bottom';
+
+    var btnDodge = document.createElement('button');
+    btnDodge.className = 'touch-btn btn-touch-dodge';
+    btnDodge.dataset.action = 'dodge';
+    btnDodge.textContent = '💨';
+    btnDodge.setAttribute('type', 'button');
+    btnDodge.setAttribute('aria-label', 'Dodge Evasion');
+    bottomRow.appendChild(btnDodge);
 
     var btnPunch = document.createElement('button');
     btnPunch.className = 'touch-btn btn-touch-punch';
     btnPunch.dataset.action = 'punch';
     btnPunch.textContent = '👊';
+    btnPunch.setAttribute('type', 'button');
+    btnPunch.setAttribute('aria-label', 'Punch Light Attack');
     bottomRow.appendChild(btnPunch);
 
     var btnKick = document.createElement('button');
     btnKick.className = 'touch-btn btn-touch-kick';
     btnKick.dataset.action = 'kick';
     btnKick.textContent = '🦶';
+    btnKick.setAttribute('type', 'button');
+    btnKick.setAttribute('aria-label', 'Kick Heavy Attack');
     bottomRow.appendChild(btnKick);
 
     rightPanel.appendChild(bottomRow);
     touchContainer.appendChild(rightPanel);
 
-    // ── Multi-Touch Touch Handlers ───────────────────────────
+    // ── Unified Multi-Touch & Pointer Handlers ─────────────────
     touchContainer.addEventListener('touchstart', onTouchStart, { passive: false });
     touchContainer.addEventListener('touchmove', onTouchMove, { passive: false });
     touchContainer.addEventListener('touchend', onTouchEnd, { passive: false });
     touchContainer.addEventListener('touchcancel', onTouchEnd, { passive: false });
+
+    // Pointer events support
+    touchContainer.addEventListener('pointerdown', onPointerDown, { passive: false });
+    touchContainer.addEventListener('pointermove', onPointerMove, { passive: false });
+    touchContainer.addEventListener('pointerup', onPointerUp, { passive: false });
+    touchContainer.addEventListener('pointercancel', onPointerUp, { passive: false });
 
     // Mount to Game Arena
     var arena = document.getElementById('screen-game') || document.body;
@@ -228,6 +268,22 @@
     return null;
   }
 
+  function triggerActionDown(action, btn) {
+    inputState.p1[action] = true;
+    if (action === 'punch' || action === 'kick' || action === 'special' || action === 'jump' || action === 'dodge') {
+      inputPressed.p1[action] = true;
+      try {
+        if (navigator.vibrate) navigator.vibrate(15);
+      } catch (vhErr) {}
+    }
+    if (btn) btn.classList.add('touch-pressed');
+  }
+
+  function triggerActionUp(action, btn) {
+    inputState.p1[action] = false;
+    if (btn) btn.classList.remove('touch-pressed');
+  }
+
   function onTouchStart(e) {
     e.preventDefault();
     for (var i = 0; i < e.changedTouches.length; i++) {
@@ -235,16 +291,8 @@
       var btn = getButtonFromPoint(touch.clientX, touch.clientY);
       if (btn) {
         var action = btn.dataset.action;
-        touchIds[touch.identifier] = action;
-        inputState.p1[action] = true;
-        if (action === 'punch' || action === 'kick' || action === 'special' || action === 'jump') {
-          inputPressed.p1[action] = true;
-          // Subtle haptic response on attack & jump
-          try {
-            if (navigator.vibrate) navigator.vibrate(15);
-          } catch (vhErr) {}
-        }
-        btn.classList.add('touch-pressed');
+        touchIds['t_' + touch.identifier] = action;
+        triggerActionDown(action, btn);
       }
     }
   }
@@ -254,26 +302,22 @@
     for (var i = 0; i < e.changedTouches.length; i++) {
       var touch = e.changedTouches[i];
       var btn = getButtonFromPoint(touch.clientX, touch.clientY);
-      var prevAction = touchIds[touch.identifier];
+      var idKey = 't_' + touch.identifier;
+      var prevAction = touchIds[idKey];
 
       if (btn) {
         var newAction = btn.dataset.action;
         if (prevAction !== newAction) {
           if (prevAction) {
-            inputState.p1[prevAction] = false;
-            var prevBtn = touchContainer.querySelector('[data-action="' + prevAction + '"]');
-            if (prevBtn) prevBtn.classList.remove('touch-pressed');
+            triggerActionUp(prevAction, touchContainer.querySelector('[data-action="' + prevAction + '"]'));
           }
-          inputState.p1[newAction] = true;
-          touchIds[touch.identifier] = newAction;
-          btn.classList.add('touch-pressed');
+          touchIds[idKey] = newAction;
+          triggerActionDown(newAction, btn);
         }
       } else {
         if (prevAction) {
-          inputState.p1[prevAction] = false;
-          var oldBtn = touchContainer.querySelector('[data-action="' + prevAction + '"]');
-          if (oldBtn) oldBtn.classList.remove('touch-pressed');
-          delete touchIds[touch.identifier];
+          triggerActionUp(prevAction, touchContainer.querySelector('[data-action="' + prevAction + '"]'));
+          delete touchIds[idKey];
         }
       }
     }
@@ -283,13 +327,56 @@
     e.preventDefault();
     for (var i = 0; i < e.changedTouches.length; i++) {
       var touch = e.changedTouches[i];
-      var action = touchIds[touch.identifier];
+      var idKey = 't_' + touch.identifier;
+      var action = touchIds[idKey];
       if (action) {
-        inputState.p1[action] = false;
-        var btn = touchContainer.querySelector('[data-action="' + action + '"]');
-        if (btn) btn.classList.remove('touch-pressed');
-        delete touchIds[touch.identifier];
+        triggerActionUp(action, touchContainer.querySelector('[data-action="' + action + '"]'));
+        delete touchIds[idKey];
       }
+    }
+  }
+
+  // Pointer event support for non-touch / stylus / pointer devices
+  function onPointerDown(e) {
+    if (e.pointerType === 'touch') return; // Handled by touch events
+    e.preventDefault();
+    var btn = getButtonFromPoint(e.clientX, e.clientY);
+    if (btn) {
+      var action = btn.dataset.action;
+      touchIds['p_' + e.pointerId] = action;
+      triggerActionDown(action, btn);
+    }
+  }
+
+  function onPointerMove(e) {
+    if (e.pointerType === 'touch') return;
+    var idKey = 'p_' + e.pointerId;
+    if (!touchIds[idKey]) return;
+    e.preventDefault();
+    var btn = getButtonFromPoint(e.clientX, e.clientY);
+    var prevAction = touchIds[idKey];
+    if (btn) {
+      var newAction = btn.dataset.action;
+      if (prevAction !== newAction) {
+        if (prevAction) triggerActionUp(prevAction, touchContainer.querySelector('[data-action="' + prevAction + '"]'));
+        touchIds[idKey] = newAction;
+        triggerActionDown(newAction, btn);
+      }
+    } else {
+      if (prevAction) {
+        triggerActionUp(prevAction, touchContainer.querySelector('[data-action="' + prevAction + '"]'));
+        delete touchIds[idKey];
+      }
+    }
+  }
+
+  function onPointerUp(e) {
+    if (e.pointerType === 'touch') return;
+    var idKey = 'p_' + e.pointerId;
+    var action = touchIds[idKey];
+    if (action) {
+      triggerActionUp(action, touchContainer.querySelector('[data-action="' + action + '"]'));
+      delete touchIds[idKey];
     }
   }
 
@@ -301,6 +388,10 @@
       touchContainer.removeEventListener('touchmove', onTouchMove);
       touchContainer.removeEventListener('touchend', onTouchEnd);
       touchContainer.removeEventListener('touchcancel', onTouchEnd);
+      touchContainer.removeEventListener('pointerdown', onPointerDown);
+      touchContainer.removeEventListener('pointermove', onPointerMove);
+      touchContainer.removeEventListener('pointerup', onPointerUp);
+      touchContainer.removeEventListener('pointercancel', onPointerUp);
       if (touchContainer.parentNode) touchContainer.parentNode.removeChild(touchContainer);
       touchContainer = null;
     }
@@ -313,10 +404,12 @@
       left:    inputState.p1.left,
       right:   inputState.p1.right,
       jump:    inputPressed.p1.jump,
+      crouch:  inputState.p1.crouch,
       block:   inputState.p1.block,
       punch:   inputPressed.p1.punch,
       kick:    inputPressed.p1.kick,
-      special: inputPressed.p1.special
+      special: inputPressed.p1.special,
+      dodge:   inputPressed.p1.dodge
     };
   }
 
@@ -325,10 +418,12 @@
       left:    inputState.p2.left,
       right:   inputState.p2.right,
       jump:    inputPressed.p2.jump,
+      crouch:  inputState.p2.crouch,
       block:   inputState.p2.block,
       punch:   inputPressed.p2.punch,
       kick:    inputPressed.p2.kick,
-      special: inputPressed.p2.special
+      special: inputPressed.p2.special,
+      dodge:   inputPressed.p2.dodge
     };
   }
 
@@ -337,10 +432,13 @@
     inputPressed.p1.kick = false;
     inputPressed.p1.special = false;
     inputPressed.p1.jump = false;
+    inputPressed.p1.dodge = false;
+
     inputPressed.p2.punch = false;
     inputPressed.p2.kick = false;
     inputPressed.p2.special = false;
     inputPressed.p2.jump = false;
+    inputPressed.p2.dodge = false;
   }
 
   // ── Fullscreen API ───────────────────────────────────────────

@@ -23,22 +23,7 @@
     <div class="cyber-scanlines"></div>
   </div>
 
-  <!-- ==================== Landscape Orientation Prompt (Mobile) ==================== -->
-  <div id="landscape-prompt" class="landscape-prompt hidden">
-    <div class="rotate-box-glow">
-      <div class="rotate-phone-icon">
-        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" width="48" height="48">
-          <rect x="8" y="14" width="32" height="20" rx="3" stroke="#00e5ff"/>
-          <path d="M12 24h1m22 0h1M4 20l4-4 4 4M44 28l-4 4-4-4" stroke="#ff6a00"/>
-        </svg>
-      </div>
-      <div class="rotate-text">
-        <strong>ROTATE TO LANDSCAPE</strong>
-        <span>Next-Gen Martial Arena Experience</span>
-      </div>
-      <button class="btn-dismiss-rotate" id="btn-dismiss-rotate" title="Dismiss">✕</button>
-    </div>
-  </div>
+
 
   <!-- ==================== Screen 1: Brand-New Street Fighter 6 / Tekken 8 Main Menu ==================== -->
   <div id="screen-home" class="screen active screen-home-arcade">
@@ -941,7 +926,10 @@
         <!-- Ready & Launch Action Bar -->
         <div class="lobby-bottom-bar">
           <p class="lobby-ready-hint" id="ready-status">Select your fighter and click READY FOR BATTLE.</p>
-          <button class="btn btn-lobby-ready" id="btn-ready">READY FOR BATTLE ✓</button>
+          <div class="lobby-action-buttons">
+            <button class="btn btn-lobby-ready" id="btn-ready">READY FOR BATTLE ✓</button>
+            <button class="btn btn-start-match disabled" id="btn-start-match" disabled>START MATCH ⚔</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1055,6 +1043,67 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== Server Configuration Modal ==================== -->
+  <div id="modal-server-config" class="modal-overlay hidden">
+    <div class="modal-box modal-box-arcade">
+      <div class="modal-header">
+        <div class="modal-header-tag">
+          <span class="tag-sq"></span>
+          <h3 class="modal-title">MULTIPLAYER SERVER</h3>
+        </div>
+        <button class="btn-close-modal" id="btn-close-server-modal" title="Close Server Setup">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-section">
+          <h4 class="setting-section-title">PERSISTENT BACKEND ENDPOINT</h4>
+          <p class="server-help-note">
+            Online custom rooms require a persistent WebSocket server (Render, Railway, or VPS).
+            Vercel hosts frontend static assets.
+          </p>
+          <div class="server-input-wrap">
+            <label for="input-server-url" class="join-label">Backend Server URL (HTTPS / WSS)</label>
+            <input type="url" id="input-server-url" class="input-server-url" placeholder="https://sandai-backend.onrender.com" spellcheck="false">
+          </div>
+          <div class="server-presets-bar">
+            <span class="preset-label">Presets:</span>
+            <button type="button" class="btn-server-preset" id="preset-render">Render Production</button>
+            <button type="button" class="btn-server-preset" id="preset-localhost">Localhost (3000)</button>
+            <button type="button" class="btn-server-preset" id="preset-current">Current Origin</button>
+          </div>
+          <div class="server-test-row">
+            <button type="button" class="btn-test-conn" id="btn-test-server">TEST CONNECTION</button>
+            <div class="server-test-result" id="server-test-result">
+              <span class="status-dot"></span>
+              <span id="server-test-text">Ready to test</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-reset-settings" id="btn-reset-server">RESET DEFAULT</button>
+        <button class="btn btn-fight" id="btn-save-server">SAVE & RECONNECT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Landscape Orientation Lock Overlay ==================== -->
+  <div id="landscape-prompt" class="landscape-prompt-overlay hidden">
+    <div class="landscape-prompt-box">
+      <div class="rotate-phone-anim">
+        <svg class="phone-svg" viewBox="0 0 100 100" width="84" height="84" fill="none">
+          <rect x="32" y="16" width="36" height="68" rx="6" stroke="#ff6a00" stroke-width="3" fill="rgba(255, 106, 0, 0.15)"/>
+          <circle cx="50" cy="74" r="3.5" fill="#ff6a00"/>
+          <line x1="42" y1="23" x2="58" y2="23" stroke="#ff6a00" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M 20 40 A 35 35 0 0 1 76 24" stroke="#00e5ff" stroke-width="3" stroke-dasharray="4 3" stroke-linecap="round"/>
+          <polyline points="72,16 80,24 72,32" stroke="#00e5ff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3 class="rotate-title">ROTATE YOUR DEVICE</h3>
+      <p class="rotate-desc">Rotate your device for the best fighting experience.</p>
+      <button class="btn-dismiss-rotate" id="btn-dismiss-rotate">CONTINUE IN PORTRAIT</button>
     </div>
   </div>
 
