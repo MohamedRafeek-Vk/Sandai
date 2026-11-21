@@ -1253,7 +1253,7 @@
 
       socket.off('game-state');
       socket.on('game-state', (data) => {
-        if (!self.roundActive || self.matchOver) return;
+        if (self.matchOver) return;
         if (self.localPlayerIndex === 1 && data.state) {
           var s = data.state;
           self.fighter1.x = Phaser.Math.Linear(self.fighter1.x, s.p1X, 0.4);

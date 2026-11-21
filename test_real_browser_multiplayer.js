@@ -264,16 +264,21 @@ async function testRealMultiplayer() {
 
     // --- 7. Real-Time Health & Damage Synchronization ---
     console.log('\n--- 7. Real-Time Health & Damage Synchronization ---');
-    // Host applies hit damage to Guest
+    // Host applies hit damage to Guest and broadcasts authoritative game-state
     await hostPage.evaluate(() => {
       if (window.SANDAI.activeFightScene && window.SANDAI.socket) {
         window.SANDAI.activeFightScene.fighter2.takeDamage(15);
-        window.SANDAI.socket.emit('game-action', {
+        window.SANDAI.socket.emit('game-state', {
           roomCode: window.SANDAI.roomCode,
-          action: 'damage',
-          targetPlayerIndex: 1,
-          damage: 15,
-          newHealth: window.SANDAI.activeFightScene.fighter2.health
+          state: {
+            p1X: Math.round(window.SANDAI.activeFightScene.fighter1.x),
+            p1Y: Math.round(window.SANDAI.activeFightScene.fighter1.y),
+            p1Hp: Math.round(window.SANDAI.activeFightScene.fighter1.health),
+            p2X: Math.round(window.SANDAI.activeFightScene.fighter2.x),
+            p2Y: Math.round(window.SANDAI.activeFightScene.fighter2.y),
+            p2Hp: Math.round(window.SANDAI.activeFightScene.fighter2.health),
+            timer: window.SANDAI.activeFightScene.roundTimer
+          }
         });
       }
     });
@@ -312,11 +317,46 @@ async function testRealMultiplayer() {
     await hostPage.screenshot({ path: path.join(ARTIFACT_DIR, 'test_multiplayer_host_victory.png') });
     await guestPage.screenshot({ path: path.join(ARTIFACT_DIR, 'test_multiplayer_guest_victory.png') });
 
-    // --- 9. Clean Room Leave / Return to Lobby ---
-    console.log('\n--- 9. Clean Room Leave / Return to Lobby ---');
+    // --- 9. Synchronized Rematch Request & Acceptance ---
+    console.log('\n--- 9. Synchronized Rematch Request & Acceptance ---');
+    await hostPage.evaluate(() => {
+      const btnRematch = document.getElementById('btn-rematch');
+      if (btnRematch) btnRematch.click();
+    });
+
+    await new Promise(r => setTimeout(r, 600));
+
+    const guestRematchPrompt = await guestPage.evaluate(() => {
+      const btnRematch = document.getElementById('btn-rematch');
+      return {
+        btnText: btnRematch ? btnRematch.textContent : ''
+      };
+    });
+    assert(guestRematchPrompt.btnText.includes('ACCEPT REMATCH'), 'Guest received rematch request notification');
+
+    // Guest accepts rematch
     await guestPage.evaluate(() => {
-      const btnLeave = document.getElementById('btn-winner-menu');
-      if (btnLeave) btnLeave.click();
+      const btnRematch = document.getElementById('btn-rematch');
+      if (btnRematch) btnRematch.click();
+    });
+
+    // Both clients transition into rematch loading sequence
+    await hostPage.waitForSelector('#screen-loading.active', { timeout: 5000 });
+    await guestPage.waitForSelector('#screen-loading.active', { timeout: 5000 });
+    assert(true, 'Both clients triggered synchronized rematch');
+
+    // --- 10. Clean Room Leave / Return to Lobby ---
+    console.log('\n--- 10. Clean Room Leave / Return to Lobby ---');
+    // Wait for fight screen in rematch then guest returns to main menu
+    await hostPage.waitForSelector('#screen-game.active', { timeout: 8000 });
+    await guestPage.waitForSelector('#screen-game.active', { timeout: 8000 });
+
+    await guestPage.evaluate(() => {
+      if (window.SANDAI.socket && window.SANDAI.roomCode) {
+        window.SANDAI.socket.emit('leave-room', { roomCode: window.SANDAI.roomCode });
+        window.SANDAI.roomCode = null;
+      }
+      window.SANDAI.showScreen('screen-home');
     });
 
     await new Promise(r => setTimeout(r, 1200));
