@@ -53,22 +53,52 @@
       this.p2CharId = window.SANDAI.player2Character !== undefined && window.SANDAI.player2Character !== null ? window.SANDAI.player2Character : 1;
       this.localPlayerIndex = (window.SANDAI.playerNumber === 2) ? 1 : 0;
       this.isOnline = (this.gameMode === 'online');
+      this.isTraining = (this.gameMode === 'training');
 
       // Match state
       this.roundNumber = 1;
-      this.maxRounds = 3;
+      this.maxRounds = this.isTraining ? 999 : 3;
       this.p1RoundWins = 0;
       this.p2RoundWins = 0;
-      this.roundTimer = 99;
+      this.roundTimer = this.isTraining ? 999 : 99;
       this.timerAccumulator = 0;
       this.roundActive = false;
       this.matchOver = false;
       this.stateSyncTimer = 0;
       this.lightningTimer = 0;
 
+      // Next-Gen Combat Feel: Hit Stop & Slow-Motion KO
+      this.hitStopFrames = 0;
+      this.isSlowMo = false;
+      this.slowMoTimer = 0;
+
+      // Training Mode Controllers & Telemetry
+      this.dummyMode = window.SANDAI.trainingDummyMode || 'stand';
+      this.inputHistory = [];
+      this.dummyRecoverTimer = 0;
+      this.trainingStats = { lastHit: 0, comboDamage: 0, maxCombo: 0 };
+
       // Recoil health tracking for smooth fighting game health bar trails
       this.p1RecoilHealth = 100;
       this.p2RecoilHealth = 100;
+
+      // Initialize Three.js 2.5D Real-time 3D Engine (Stage 2 Upgrade)
+      this.renderer3d = null;
+      this.selectedArena = window.SANDAI.selectedArena || 'mountain';
+      if (window.SANDAI.Renderer3D && typeof THREE !== 'undefined') {
+        try {
+          this.renderer3d = new window.SANDAI.Renderer3D('game-container');
+          this.renderer3d.loadArena(this.selectedArena);
+          var p1Data = window.SANDAI.CHARACTERS[this.p1CharId] || window.SANDAI.CHARACTERS[0];
+          var p2Data = window.SANDAI.CHARACTERS[this.p2CharId] || window.SANDAI.CHARACTERS[1];
+          this.renderer3d.fighter1Mesh = this.renderer3d.createFighterModel(p1Data, 0);
+          this.renderer3d.fighter2Mesh = this.renderer3d.createFighterModel(p2Data, 1);
+          console.log('[SANDAI 2.5D] Three.js articulated 3D fighters & 3D arena initialized:', this.selectedArena);
+        } catch (err3d) {
+          console.warn('[SANDAI 2.5D] 3D initialization failed, falling back to 2D:', err3d);
+          this.renderer3d = null;
+        }
+      }
 
       // Build Visual Arena
       this.createArenaBackground(W, H);
@@ -80,15 +110,23 @@
       this.fighter1.createSprite();
       this.fighter2.createSprite();
 
+      // If 3D rendering is active, hide 2D sprites so 3D articulated models are displayed
+      if (this.renderer3d) {
+        if (this.fighter1.sprite) this.fighter1.sprite.setVisible(false);
+        if (this.fighter2.sprite) this.fighter2.sprite.setVisible(false);
+      }
+
       // AI Controller
       if (this.gameMode === 'ai') {
-        this.ai = new window.SANDAI.AIController(this.fighter2, 'medium');
+        this.ai = new window.SANDAI.AIController(this.fighter2, window.SANDAI.aiDifficulty || 'normal');
       } else {
         this.ai = null;
       }
 
       // Build HUD
       this.createHUD(W, H);
+
+      window.SANDAI.activeFightScene = this;
 
       // Controls Setup
       if (window.SANDAI.Controls) {
@@ -204,6 +242,10 @@
 
     // ── Visual Arena Background System (5 Cinematic Environments) ──
     createArenaBackground(W, H) {
+      if (this.renderer3d) {
+        // Three.js 3D arena renders directly in real-time WebGL behind Phaser HUD
+        return;
+      }
       this.selectedArena = window.SANDAI.selectedArena || 'mountain';
 
       if (this.selectedArena === 'mountain') {
@@ -596,34 +638,46 @@
     }
 
     // ── Combat Hit Sparks & Shockwaves ────────────────────────────
-    onHitLanded(attacker, defender, attackType, impactX, impactY) {
-      // 1. Camera Shake
-      if (attackType === 'special') {
-        this.cameras.main.shake(250, 0.022);
+    onHitLanded(attacker, defender, attackType, impactX, impactY, isCounter) {
+      // 1. Camera Shake & Hit-Stop Freeze Frame
+      if (isCounter) {
+        this.cameras.main.shake(260, 0.022);
+        this.triggerHitStop(3); // Micro-pause on Counter Hit
+      } else if (attackType === 'special') {
+        this.cameras.main.shake(280, 0.024);
+        this.triggerHitStop(4); // Dramatic freeze on Special
       } else if (attackType === 'kick') {
-        this.cameras.main.shake(180, 0.014);
+        this.cameras.main.shake(190, 0.015);
+        this.triggerHitStop(2); // Punchy freeze on Heavy Kick
       } else {
         this.cameras.main.shake(120, 0.008);
+        this.triggerHitStop(1);
       }
 
-      // 2. Hit Sparks
-      var sparkCount = attackType === 'special' ? 22 : (attackType === 'kick' ? 15 : 10);
+      // 2. Floating Combat Feedback Banners
+      if (defender && defender.isGuardBroken) {
+        this.showFloatingBanner('PUNISH!', impactX, impactY - 60, '#ffd700');
+      }
+
+      // 3. Dynamic Hit Sparks
+      var sparkCount = attackType === 'special' ? 26 : (attackType === 'kick' ? 18 : 12);
+      if (isCounter) sparkCount += 10;
       var charData = window.SANDAI.CHARACTERS[attacker.charId] || window.SANDAI.CHARACTERS[0];
       var sparkColors = [0xffffff, 0xffd700, 0xff6b35, 0xdc143c];
       if (charData && charData.color) {
         try {
           var pCol = parseInt(charData.color.replace('#', '0x'), 16);
           sparkColors.unshift(pCol);
-        } catch (e) {}
+        } catch (e) { }
       }
 
       for (var i = 0; i < sparkCount; i++) {
         var angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-        var speed = Phaser.Math.FloatBetween(3, attackType === 'special' ? 12 : 7);
+        var speed = Phaser.Math.FloatBetween(3, attackType === 'special' ? 13 : 8);
         var spark = this.add.circle(
           impactX + Phaser.Math.Between(-6, 6),
           impactY + Phaser.Math.Between(-6, 6),
-          Phaser.Math.Between(2, attackType === 'special' ? 5 : 3.5),
+          Phaser.Math.Between(2, attackType === 'special' ? 5.5 : 4),
           Phaser.Math.RND.pick(sparkColors),
           1
         ).setDepth(30);
@@ -635,7 +689,7 @@
           scaleX: 0,
           scaleY: 0,
           alpha: 0,
-          duration: Phaser.Math.Between(180, 300),
+          duration: Phaser.Math.Between(180, 320),
           ease: 'Cubic.easeOut',
           onComplete: function (tw, targets) {
             if (targets[0]) targets[0].destroy();
@@ -643,61 +697,119 @@
         });
       }
 
-      // 3. Shockwave Ring
-      var shockwave = this.add.circle(impactX, impactY, 12).setStrokeStyle(3, attackType === 'special' ? 0xffd700 : 0xffffff, 1).setDepth(31);
+      // 4. Expanding Shockwave Ring
+      var shockwave = this.add.circle(impactX, impactY, 14)
+        .setStrokeStyle(3.5, isCounter ? 0xff1744 : (attackType === 'special' ? 0xffd700 : 0xffffff), 1)
+        .setDepth(31);
       this.tweens.add({
         targets: shockwave,
-        radius: attackType === 'special' ? 65 : 40,
+        radius: attackType === 'special' ? 70 : 45,
         alpha: 0,
-        duration: 220,
+        duration: 230,
         ease: 'Quad.easeOut',
         onComplete: function () {
           shockwave.destroy();
         }
       });
+
+      // 5. Trigger 3D Hit Sparks & VFX in Three.js Scene
+      if (this.renderer3d) {
+        if (attackType === 'special') {
+          this.renderer3d.triggerSpecialVFX(attacker.charId, impactX, impactY, attacker.facing);
+        } else {
+          this.renderer3d.triggerHitVFX(impactX, impactY, attackType === 'kick' || isCounter, false);
+        }
+      }
+
+      // 6. Sound Effects via Web Audio Synthesizer
+      if (window.SANDAI && window.SANDAI.Audio) {
+        if (defender && defender.isBlocking && !defender.isGuardBroken) {
+          window.SANDAI.Audio.playBlock();
+        } else {
+          if (attackType === 'special') {
+            window.SANDAI.Audio.playSpecial(attacker.charId);
+          } else if (attackType === 'kick') {
+            window.SANDAI.Audio.playKick();
+          } else {
+            window.SANDAI.Audio.playPunch();
+          }
+          window.SANDAI.Audio.playHit();
+        }
+      }
     }
 
-    // ── HUD Elements ──────────────────────────────────────────
+    // ── Floating Combat Announcement Banners ─────────────────────
+    showFloatingBanner(text, x, y, color) {
+      var self = this;
+      var banner = this.add.text(x, y, text, {
+        fontFamily: 'Rajdhani, sans-serif',
+        fontSize: '28px',
+        fontWeight: 'bold',
+        color: color || '#ffd700',
+        stroke: '#000000',
+        strokeThickness: 5
+      }).setOrigin(0.5).setDepth(210);
+
+      this.tweens.add({
+        targets: banner,
+        y: y - 45,
+        scale: 1.25,
+        alpha: 0,
+        duration: 750,
+        ease: 'Cubic.easeOut',
+        onComplete: function () {
+          banner.destroy();
+        }
+      });
+    }
+
+    // ── Hit-Stop Freeze Frame (Micro-pause on heavy impact) ──────
+    triggerHitStop(frames) {
+      this.hitStopFrames = Math.max(this.hitStopFrames, frames || 2);
+    }
+
+    // ── Console-Grade Fighting HUD (Tekken 8 / MK11 Style) ────────
     createHUD(W, H) {
       this.hudGraphics = this.add.graphics().setDepth(100);
 
       var p1Data = window.SANDAI.CHARACTERS[this.p1CharId] || window.SANDAI.CHARACTERS[0];
       var p2Data = window.SANDAI.CHARACTERS[this.p2CharId] || window.SANDAI.CHARACTERS[1];
 
-      // P1 Portrait icon in HUD
+      // P1 Portrait & Angled Frame
       if (this.textures.exists('portrait_' + p1Data.name)) {
         this.add.image(55, 52, 'portrait_' + p1Data.name).setDisplaySize(64, 64).setDepth(101);
       }
-      this.p1NameText = this.add.text(95, 26, p1Data.name.toUpperCase(), {
+      // Strict Name Purity: Plain original character name only!
+      this.p1NameText = this.add.text(95, 24, p1Data.name.toUpperCase(), {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '24px',
+        fontSize: '26px',
         fontWeight: '700',
         color: '#ffffff'
       }).setDepth(101);
-      this.p1StyleText = this.add.text(95, 54, p1Data.style, {
+      this.p1StyleText = this.add.text(95, 52, p1Data.style, {
         fontFamily: 'Inter, sans-serif',
-        fontSize: '12px',
-        color: '#ffaa66'
+        fontSize: '11px',
+        color: '#00f0ff'
       }).setDepth(101);
 
-      // P2 Portrait icon in HUD
+      // P2 Portrait & Angled Frame
       if (this.textures.exists('portrait_' + p2Data.name)) {
         this.add.image(W - 55, 52, 'portrait_' + p2Data.name).setDisplaySize(64, 64).setDepth(101);
       }
-      this.p2NameText = this.add.text(W - 95, 26, p2Data.name.toUpperCase(), {
+      this.p2NameText = this.add.text(W - 95, 24, p2Data.name.toUpperCase(), {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '24px',
+        fontSize: '26px',
         fontWeight: '700',
         color: '#ffffff'
       }).setOrigin(1, 0).setDepth(101);
-      this.p2StyleText = this.add.text(W - 95, 54, p2Data.style, {
+      this.p2StyleText = this.add.text(W - 95, 52, p2Data.style, {
         fontFamily: 'Inter, sans-serif',
-        fontSize: '12px',
-        color: '#66aaff'
+        fontSize: '11px',
+        color: '#ff1744'
       }).setOrigin(1, 0).setDepth(101);
 
-      // Center Timer Display
-      this.timerText = this.add.text(W / 2, 48, '99', {
+      // Central Hexagonal Timer Display
+      this.timerText = this.add.text(W / 2, 48, this.isTraining ? '∞' : '99', {
         fontFamily: 'Rajdhani, sans-serif',
         fontSize: '48px',
         fontWeight: 'bold',
@@ -709,25 +821,59 @@
         fontFamily: 'Rajdhani, sans-serif',
         fontSize: '76px',
         fontWeight: 'bold',
-        color: '#ffdd00',
+        color: '#ffd700',
         stroke: '#000000',
         strokeThickness: 8
       }).setOrigin(0.5).setDepth(200);
 
-      // Combo Texts
-      this.p1ComboText = this.add.text(120, 180, '', {
+      // Combo Texts with dynamic damage badge
+      this.p1ComboText = this.add.text(120, 175, '', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '32px',
+        fontSize: '34px',
         fontWeight: 'bold',
         color: '#ff6b35'
       }).setDepth(101);
 
-      this.p2ComboText = this.add.text(W - 120, 180, '', {
+      this.p2ComboText = this.add.text(W - 120, 175, '', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '32px',
+        fontSize: '34px',
         fontWeight: 'bold',
         color: '#ff6b35'
       }).setOrigin(1, 0).setDepth(101);
+
+      // Bottom Super Energy Meter Banner Texts
+      this.p1SuperText = this.add.text(95, H - 54, 'ENERGY: 0%', {
+        fontFamily: 'Rajdhani, sans-serif',
+        fontSize: '13px',
+        fontWeight: '700',
+        color: '#00f0ff'
+      }).setDepth(101);
+
+      this.p2SuperText = this.add.text(W - 95, H - 54, 'ENERGY: 0%', {
+        fontFamily: 'Rajdhani, sans-serif',
+        fontSize: '13px',
+        fontWeight: '700',
+        color: '#ff1744'
+      }).setOrigin(1, 0).setDepth(101);
+
+      // Training Mode Telemetry & Input History Overlays
+      if (this.isTraining) {
+        this.trainingStatsText = this.add.text(W / 2, 95, 'TRAINING MODE • DUMMY: STAND', {
+          fontFamily: 'Rajdhani, sans-serif',
+          fontSize: '15px',
+          fontWeight: '700',
+          color: '#00f0ff'
+        }).setOrigin(0.5).setDepth(101);
+
+        this.inputHistoryText = this.add.text(25, H - 85, 'INPUTS: [READY]', {
+          fontFamily: 'Rajdhani, sans-serif',
+          fontSize: '16px',
+          fontWeight: '600',
+          color: '#ffd700',
+          backgroundColor: '#0a0a10cc',
+          padding: { x: 8, y: 4 }
+        }).setDepth(101);
+      }
     }
 
     drawHUD(W, H) {
@@ -747,23 +893,24 @@
         this.p2RecoilHealth = this.fighter2.health;
       }
 
-      // Health Bar Dimensions
-      var barW = 440;
-      var barH = 24;
-      var barY = 76;
+      // Health Bar Dimensions (Tekken 8 / MK11 angled look)
+      var barW = 450;
+      var barH = 26;
+      var barY = 72;
       var p1BarX = 95;
       var p2BarX = W - 95 - barW;
 
-      // P1 Health Background Bar
-      g.fillStyle(0x161622, 0.95);
+      // ── P1 HEALTH BAR ──
+      // Background bar with metallic border
+      g.fillStyle(0x10121a, 0.95);
       g.fillRoundedRect(p1BarX, barY, barW, barH, 4);
-      g.lineStyle(2, 0xff1744, 0.9);
+      g.lineStyle(2.5, 0x00f0ff, 0.85);
       g.strokeRoundedRect(p1BarX, barY, barW, barH, 4);
 
       // P1 Recoil Bar (Golden damage trail)
       var p1RecoilW = barW * Math.max(0, this.p1RecoilHealth / 100);
       if (p1RecoilW > 0) {
-        g.fillStyle(0xffaa22, 0.95);
+        g.fillStyle(0xff9900, 0.95);
         g.fillRoundedRect(p1BarX, barY, p1RecoilW, barH, 4);
       }
 
@@ -771,45 +918,45 @@
       var p1Ratio = Math.max(0, this.fighter1.health / 100);
       var p1FillW = barW * p1Ratio;
       if (p1FillW > 0) {
-        var p1Color = p1Ratio > 0.5 ? 0x00ff88 : (p1Ratio > 0.25 ? 0xffaa00 : 0xff1744);
+        var p1Color = p1Ratio > 0.5 ? 0x00e676 : (p1Ratio > 0.25 ? 0xffb300 : 0xff1744);
         g.fillStyle(p1Color, 1);
         g.fillRoundedRect(p1BarX, barY, p1FillW, barH, 4);
       }
 
-      // P1 Special Cooldown Bar
-      var specW = 180;
-      var specH = 6;
-      var specY = barY + barH + 6;
-      g.fillStyle(0x222233, 0.85);
-      g.fillRect(p1BarX, specY, specW, specH);
-      var p1SpecReady = (this.fighter1.specialCooldown <= 0);
-      var p1SpecRatio = p1SpecReady ? 1 : (1 - this.fighter1.specialCooldown / 180);
-      g.fillStyle(p1SpecReady ? 0xffd700 : 0x00f0ff, 1);
-      g.fillRect(p1BarX, specY, specW * p1SpecRatio, specH);
+      // P1 Guard Stamina Meter (Underneath health bar)
+      var guardW = 320;
+      var guardH = 5;
+      var guardY = barY + barH + 4;
+      g.fillStyle(0x161824, 0.9);
+      g.fillRect(p1BarX, guardY, guardW, guardH);
+      var p1GuardRatio = Math.max(0, (this.fighter1.guardStamina || 100) / 100);
+      var p1GuardCol = this.fighter1.isGuardBroken ? 0xe040fb : (p1GuardRatio > 0.4 ? 0x00e5ff : 0xff1744);
+      g.fillStyle(p1GuardCol, 1);
+      g.fillRect(p1BarX, guardY, guardW * p1GuardRatio, guardH);
 
-      // P1 Round Win Diamonds (Dragon pips)
+      // P1 Round Win Diamonds (Dragon gem pips)
       for (var r1 = 0; r1 < 2; r1++) {
         var dotX = p1BarX + barW - 35 + r1 * 24;
         var r1Won = r1 < this.p1RoundWins;
-        g.fillStyle(r1Won ? 0xffd700 : 0x333348, 1);
-        g.fillTriangle(dotX, specY - 3, dotX + 7, specY + 4, dotX - 7, specY + 4);
-        g.fillTriangle(dotX, specY + 11, dotX + 7, specY + 4, dotX - 7, specY + 4);
+        g.fillStyle(r1Won ? 0xffd700 : 0x242838, 1);
+        g.fillTriangle(dotX, guardY - 2, dotX + 7, guardY + 5, dotX - 7, guardY + 5);
+        g.fillTriangle(dotX, guardY + 12, dotX + 7, guardY + 5, dotX - 7, guardY + 5);
         if (r1Won) {
-          g.lineStyle(1.5, 0xffffff, 0.8);
-          g.strokeCircle(dotX, specY + 4, 8);
+          g.lineStyle(1.5, 0xffffff, 0.9);
+          g.strokeCircle(dotX, guardY + 5, 8);
         }
       }
 
-      // P2 Health Background Bar
-      g.fillStyle(0x161622, 0.95);
+      // ── P2 HEALTH BAR ──
+      g.fillStyle(0x10121a, 0.95);
       g.fillRoundedRect(p2BarX, barY, barW, barH, 4);
-      g.lineStyle(2, 0xff1744, 0.9);
+      g.lineStyle(2.5, 0xff1744, 0.85);
       g.strokeRoundedRect(p2BarX, barY, barW, barH, 4);
 
       // P2 Recoil Bar (Golden damage trail)
       var p2RecoilW = barW * Math.max(0, this.p2RecoilHealth / 100);
       if (p2RecoilW > 0) {
-        g.fillStyle(0xffaa22, 0.95);
+        g.fillStyle(0xff9900, 0.95);
         g.fillRoundedRect(p2BarX + (barW - p2RecoilW), barY, p2RecoilW, barH, 4);
       }
 
@@ -817,29 +964,85 @@
       var p2Ratio = Math.max(0, this.fighter2.health / 100);
       var p2FillW = barW * p2Ratio;
       if (p2FillW > 0) {
-        var p2Color = p2Ratio > 0.5 ? 0x00ff88 : (p2Ratio > 0.25 ? 0xffaa00 : 0xff1744);
+        var p2Color = p2Ratio > 0.5 ? 0x00e676 : (p2Ratio > 0.25 ? 0xffb300 : 0xff1744);
         g.fillStyle(p2Color, 1);
         g.fillRoundedRect(p2BarX + (barW - p2FillW), barY, p2FillW, barH, 4);
       }
 
-      // P2 Special Cooldown Bar
-      g.fillStyle(0x222233, 0.85);
-      g.fillRect(p2BarX + barW - specW, specY, specW, specH);
-      var p2SpecReady = (this.fighter2.specialCooldown <= 0);
-      var p2SpecRatio = p2SpecReady ? 1 : (1 - this.fighter2.specialCooldown / 180);
-      g.fillStyle(p2SpecReady ? 0xffd700 : 0x00f0ff, 1);
-      g.fillRect(p2BarX + barW - (specW * p2SpecRatio), specY, specW * p2SpecRatio, specH);
+      // P2 Guard Stamina Meter
+      g.fillStyle(0x161824, 0.9);
+      g.fillRect(p2BarX + barW - guardW, guardY, guardW, guardH);
+      var p2GuardRatio = Math.max(0, (this.fighter2.guardStamina || 100) / 100);
+      var p2GuardCol = this.fighter2.isGuardBroken ? 0xe040fb : (p2GuardRatio > 0.4 ? 0x00e5ff : 0xff1744);
+      g.fillStyle(p2GuardCol, 1);
+      g.fillRect(p2BarX + barW - (guardW * p2GuardRatio), guardY, guardW * p2GuardRatio, guardH);
 
-      // P2 Round Win Diamonds (Dragon pips)
+      // P2 Round Win Diamonds (Dragon gem pips)
       for (var r2 = 0; r2 < 2; r2++) {
         var dotX2 = p2BarX + 15 + r2 * 24;
         var r2Won = r2 < this.p2RoundWins;
-        g.fillStyle(r2Won ? 0xffd700 : 0x333348, 1);
-        g.fillTriangle(dotX2, specY - 3, dotX2 + 7, specY + 4, dotX2 - 7, specY + 4);
-        g.fillTriangle(dotX2, specY + 11, dotX2 + 7, specY + 4, dotX2 - 7, specY + 4);
+        g.fillStyle(r2Won ? 0xffd700 : 0x242838, 1);
+        g.fillTriangle(dotX2, guardY - 2, dotX2 + 7, guardY + 5, dotX2 - 7, guardY + 5);
+        g.fillTriangle(dotX2, guardY + 12, dotX2 + 7, guardY + 5, dotX2 - 7, guardY + 5);
         if (r2Won) {
-          g.lineStyle(1.5, 0xffffff, 0.8);
-          g.strokeCircle(dotX2, specY + 4, 8);
+          g.lineStyle(1.5, 0xffffff, 0.9);
+          g.strokeCircle(dotX2, guardY + 5, 8);
+        }
+      }
+
+      // ── BOTTOM SUPER ENERGY GAUGES (0-100% with Special Ready Glow) ──
+      var gaugeW = 320;
+      var gaugeH = 16;
+      var gaugeY = H - 36;
+
+      // P1 Super Gauge (Left)
+      var p1Energy = Math.max(0, Math.min(100, this.fighter1.energy || 0));
+      g.fillStyle(0x0e1018, 0.9);
+      g.fillRoundedRect(p1BarX, gaugeY, gaugeW, gaugeH, 3);
+      g.lineStyle(2, p1Energy >= 50 ? 0xffd700 : 0x00f0ff, 0.85);
+      g.strokeRoundedRect(p1BarX, gaugeY, gaugeW, gaugeH, 3);
+
+      var p1EnergyFillW = gaugeW * (p1Energy / 100);
+      if (p1EnergyFillW > 0) {
+        g.fillStyle(p1Energy >= 50 ? 0xffd700 : 0x00e5ff, 1);
+        g.fillRoundedRect(p1BarX, gaugeY, p1EnergyFillW, gaugeH, 3);
+      }
+      // 50% Threshold Segment Divider
+      g.fillStyle(0xffffff, 0.9);
+      g.fillRect(p1BarX + gaugeW * 0.5 - 1, gaugeY, 2, gaugeH);
+
+      if (this.p1SuperText) {
+        if (p1Energy >= 100) {
+          this.p1SuperText.setText('★ MAX SPECIAL READY ★').setColor('#ffd700');
+        } else if (p1Energy >= 50) {
+          this.p1SuperText.setText('⚡ SPECIAL READY (' + Math.round(p1Energy) + '%)').setColor('#00ff88');
+        } else {
+          this.p1SuperText.setText('ENERGY: ' + Math.round(p1Energy) + '%').setColor('#00f0ff');
+        }
+      }
+
+      // P2 Super Gauge (Right)
+      var p2Energy = Math.max(0, Math.min(100, this.fighter2.energy || 0));
+      g.fillStyle(0x0e1018, 0.9);
+      g.fillRoundedRect(p2BarX + barW - gaugeW, gaugeY, gaugeW, gaugeH, 3);
+      g.lineStyle(2, p2Energy >= 50 ? 0xffd700 : 0xff1744, 0.85);
+      g.strokeRoundedRect(p2BarX + barW - gaugeW, gaugeY, gaugeW, gaugeH, 3);
+
+      var p2EnergyFillW = gaugeW * (p2Energy / 100);
+      if (p2EnergyFillW > 0) {
+        g.fillStyle(p2Energy >= 50 ? 0xffd700 : 0xff1744, 1);
+        g.fillRoundedRect(p2BarX + barW - p2EnergyFillW, gaugeY, p2EnergyFillW, gaugeH, 3);
+      }
+      g.fillStyle(0xffffff, 0.9);
+      g.fillRect(p2BarX + barW - gaugeW * 0.5 - 1, gaugeY, 2, gaugeH);
+
+      if (this.p2SuperText) {
+        if (p2Energy >= 100) {
+          this.p2SuperText.setText('★ MAX SPECIAL READY ★').setColor('#ffd700');
+        } else if (p2Energy >= 50) {
+          this.p2SuperText.setText('⚡ SPECIAL READY (' + Math.round(p2Energy) + '%)').setColor('#00ff88');
+        } else {
+          this.p2SuperText.setText('ENERGY: ' + Math.round(p2Energy) + '%').setColor('#ff1744');
         }
       }
     }
@@ -848,19 +1051,25 @@
     startRound(num) {
       this.roundNumber = num;
       this.roundActive = false;
-      this.roundTimer = 99;
+      this.roundTimer = this.isTraining ? 999 : 99;
       this.timerAccumulator = 0;
-      this.timerText.setText('99');
+      this.timerText.setText(this.isTraining ? '∞' : '99');
       this.timerText.setColor('#ffffff');
 
       // Reset Fighters
       this.fighter1.reset();
       this.fighter2.reset();
 
-      var roundLabel = num === 3 ? 'FINAL ROUND' : ('ROUND ' + num);
+      // Trigger Arena Ambience & Gong via Procedural Audio Engine
+      if (window.SANDAI && window.SANDAI.Audio) {
+        window.SANDAI.Audio.playRoundStart();
+        window.SANDAI.Audio.startAmbience(this.selectedArena);
+      }
+
+      var roundLabel = this.isTraining ? 'TRAINING MODE' : (num === 3 ? 'FINAL ROUND' : ('ROUND ' + num));
       this.showAnnouncement(roundLabel, 1100, () => {
         this.cameras.main.shake(140, 0.01);
-        this.showAnnouncement('FIGHT!', 800, () => {
+        this.showAnnouncement(this.isTraining ? 'PRACTICE!' : 'FIGHT!', 800, () => {
           this.roundActive = true;
         });
       });
@@ -873,7 +1082,7 @@
 
       if (text === 'K.O.!') {
         this.announcementText.setColor('#ff1744');
-      } else if (text === 'FIGHT!') {
+      } else if (text === 'FIGHT!' || text === 'PRACTICE!') {
         this.announcementText.setColor('#ffd700');
       } else {
         this.announcementText.setColor('#ffffff');
@@ -912,10 +1121,17 @@
       if (!this.roundActive) return;
       this.roundActive = false;
 
+      // Cinematic K.O. Finish with Slow-Motion
       var label = reason === 'ko' ? 'K.O.!' : 'TIME UP!';
       if (reason === 'ko') {
-        this.cameras.main.flash(220, 255, 30, 30);
-        this.cameras.main.shake(280, 0.02);
+        if (window.SANDAI && window.SANDAI.Audio) window.SANDAI.Audio.playKO();
+        this.cameras.main.flash(260, 255, 30, 30);
+        this.cameras.main.shake(320, 0.024);
+        this.isSlowMo = true;
+        if (this.renderer3d && this.renderer3d.triggerKOSlowMo) {
+          this.renderer3d.triggerKOSlowMo();
+        }
+        this.time.delayedCall(1200, () => { this.isSlowMo = false; });
       } else {
         this.cameras.main.shake(150, 0.01);
       }
@@ -932,7 +1148,12 @@
 
       this.showAnnouncement(label, 1500, () => {
         // Check for Match Winner
-        if (this.p1RoundWins >= 2 || this.p2RoundWins >= 2 || this.roundNumber >= 3) {
+        if (this.isTraining) {
+          // Infinite round in training mode
+          this.fighter1.reset();
+          this.fighter2.reset();
+          this.roundActive = true;
+        } else if (this.p1RoundWins >= 2 || this.p2RoundWins >= 2 || this.roundNumber >= 3) {
           var matchWinner = this.p1RoundWins > this.p2RoundWins ? 1 : (this.p2RoundWins > this.p1RoundWins ? 2 : (victorIndex !== -1 ? victorIndex + 1 : 1));
           this.handleMatchComplete(matchWinner);
         } else {
@@ -949,6 +1170,10 @@
       var winnerCharId = winnerPlayerNum === 1 ? this.p1CharId : this.p2CharId;
       var winnerChar = window.SANDAI.CHARACTERS[winnerCharId] || window.SANDAI.CHARACTERS[0];
 
+      if (window.SANDAI && window.SANDAI.Audio) {
+        window.SANDAI.Audio.playVictory();
+      }
+
       this.showAnnouncement(winnerChar.name.toUpperCase() + ' WINS!', 2000, () => {
         if (typeof window.SANDAI.onMatchComplete === 'function') {
           window.SANDAI.onMatchComplete({
@@ -957,7 +1182,10 @@
             p1RoundWins: this.p1RoundWins,
             p2RoundWins: this.p2RoundWins,
             p1Health: Math.round(this.fighter1.health),
-            p2Health: Math.round(this.fighter2.health)
+            p2Health: Math.round(this.fighter2.health),
+            p1Damage: Math.round(this.fighter1.totalDamageDealt || 0),
+            p2Damage: Math.round(this.fighter2.totalDamageDealt || 0),
+            maxCombo: Math.max(this.fighter1.maxCombo || 0, this.fighter2.maxCombo || 0)
           });
         }
       });
@@ -1012,28 +1240,50 @@
 
     // ── Main Game Loop ────────────────────────────────────────
     update(time, delta) {
-      this.updateArenaParticles(delta);
-      this.drawHUD(1280, 720);
-
-      if (!this.roundActive || this.matchOver) {
-        if (this.fighter1) this.fighter1.update(delta);
-        if (this.fighter2) this.fighter2.update(delta);
+      // 1. Hit-Stop Freeze Frame (Visceral tactile impact micro-pause)
+      if (this.hitStopFrames > 0) {
+        this.hitStopFrames--;
         return;
       }
 
-      // Round Timer Countdown
-      this.timerAccumulator += delta;
-      if (this.timerAccumulator >= 1000) {
-        this.timerAccumulator -= 1000;
-        this.roundTimer--;
-        this.timerText.setText(this.roundTimer.toString());
-        if (this.roundTimer <= 10) {
-          this.timerText.setColor('#ff3333');
+      // 2. Cinematic K.O. Slow-Motion Timescale
+      var effectiveDelta = this.isSlowMo ? (delta * 0.28) : delta;
+
+      this.updateArenaParticles(effectiveDelta);
+      this.drawHUD(1280, 720);
+
+      // Synchronize 3D articulated fighters and skeletal animations with 2.5D game physics
+      if (this.renderer3d) {
+        var dt = effectiveDelta / 1000;
+        if (this.fighter1 && this.renderer3d.fighter1Mesh) {
+          this.renderer3d.updateFighterAnimation(this.renderer3d.fighter1Mesh, this.fighter1, dt);
         }
-        if (this.roundTimer <= 0) {
-          var victor = this.fighter1.health > this.fighter2.health ? 0 : (this.fighter2.health > this.fighter1.health ? 1 : -1);
-          this.handleRoundEnd(victor, 'time');
-          return;
+        if (this.fighter2 && this.renderer3d.fighter2Mesh) {
+          this.renderer3d.updateFighterAnimation(this.renderer3d.fighter2Mesh, this.fighter2, dt);
+        }
+      }
+
+      if (!this.roundActive || this.matchOver) {
+        if (this.fighter1) this.fighter1.update(effectiveDelta);
+        if (this.fighter2) this.fighter2.update(effectiveDelta);
+        return;
+      }
+
+      // Round Timer Countdown (Infinite in Training Mode)
+      if (!this.isTraining) {
+        this.timerAccumulator += effectiveDelta;
+        if (this.timerAccumulator >= 1000) {
+          this.timerAccumulator -= 1000;
+          this.roundTimer--;
+          this.timerText.setText(this.roundTimer.toString());
+          if (this.roundTimer <= 10) {
+            this.timerText.setColor('#ff1744');
+          }
+          if (this.roundTimer <= 0) {
+            var victor = this.fighter1.health > this.fighter2.health ? 0 : (this.fighter2.health > this.fighter1.health ? 1 : -1);
+            this.handleRoundEnd(victor, 'time');
+            return;
+          }
         }
       }
 
@@ -1041,6 +1291,53 @@
       var ctrl = window.SANDAI.Controls;
       var p1Input = ctrl ? ctrl.getP1Input() : {};
       var p2Input = ctrl ? ctrl.getP2Input() : {};
+
+      // Record On-Screen Input History Stream (Training Mode)
+      if (this.isTraining && ctrl) {
+        var pressed = ctrl.getP1Pressed ? ctrl.getP1Pressed() : {};
+        var tokens = [];
+        if (pressed.punch) tokens.push('[J-PUNCH]');
+        if (pressed.kick) tokens.push('[K-KICK]');
+        if (pressed.special) tokens.push('[L-SPECIAL]');
+        if (pressed.jump) tokens.push('[W-JUMP]');
+        if (p1Input.left && !this.lastP1Left) tokens.push('[A-LEFT]');
+        if (p1Input.right && !this.lastP1Right) tokens.push('[D-RIGHT]');
+        if (p1Input.block && !this.lastP1Block) tokens.push('[S-BLOCK]');
+        this.lastP1Left = p1Input.left;
+        this.lastP1Right = p1Input.right;
+        this.lastP1Block = p1Input.block;
+
+        if (tokens.length > 0) {
+          for (var tk = 0; tk < tokens.length; tk++) {
+            this.inputHistory.push(tokens[tk]);
+            if (this.inputHistory.length > 8) this.inputHistory.shift();
+          }
+          if (this.inputHistoryText) {
+            this.inputHistoryText.setText('INPUT STREAM: ' + this.inputHistory.join(' '));
+          }
+        }
+
+        // Update Training Telemetry Box
+        if (this.trainingStatsText) {
+          this.trainingStatsText.setText(
+            'DUMMY: ' + (this.dummyMode || 'STAND').toUpperCase() +
+            ' | COMBO DMG: ' + Math.round(this.fighter1.comboDamage || 0) +
+            ' | MAX COMBO: ' + (this.fighter1.maxCombo || 0) + ' HITS'
+          );
+        }
+
+        // Auto-recover dummy health & guard 50 frames after combo ends
+        if (this.fighter1.comboCount === 0 && this.fighter2.health < 100) {
+          this.dummyRecoverTimer += effectiveDelta;
+          if (this.dummyRecoverTimer > 800) {
+            this.fighter2.health = Math.min(100, this.fighter2.health + 2.5);
+            this.fighter2.guardStamina = 100;
+            this.fighter2.isGuardBroken = false;
+          }
+        } else {
+          this.dummyRecoverTimer = 0;
+        }
+      }
 
       // Handle Player 1
       if (!this.isOnline || this.localPlayerIndex === 0) {
@@ -1054,8 +1351,27 @@
         else if (this.fighter1.isBlocking && !p1Input.block) { this.fighter1.stopBlocking(); this.sendLocalAction('stopBlock'); }
       }
 
-      // Handle Player 2
-      if (this.gameMode === 'ai' && this.ai) {
+      // Handle Player 2 / AI / Training Dummy
+      if (this.isTraining) {
+        // Training Dummy AI behavior modes
+        if (this.dummyMode === 'guard') {
+          this.fighter2.block();
+        } else if (this.dummyMode === 'crouch') {
+          this.fighter2.block();
+        } else if (this.dummyMode === 'jump') {
+          if (!this.fighter2.isJumping && Math.random() < 0.03) this.fighter2.jump();
+        } else if (this.dummyMode === 'attack') {
+          var dummyDist = Math.abs(this.fighter1.x - this.fighter2.x);
+          if (dummyDist < 110 && Math.random() < 0.04) {
+            this.fighter2.punch();
+          } else if (dummyDist > 140) {
+            this.fighter2.moveLeft();
+          }
+        } else {
+          // 'stand' mode: stays idle
+          if (this.fighter2.isBlocking) this.fighter2.stopBlocking();
+        }
+      } else if (this.gameMode === 'ai' && this.ai) {
         this.ai.update(this.fighter1);
       } else if (this.gameMode === 'local') {
         if (p2Input.left) this.fighter2.moveLeft();
@@ -1085,8 +1401,22 @@
       this.fighter2.faceOpponent(this.fighter1);
 
       // Fighter Updates & Collisions
-      this.fighter1.update(delta);
-      this.fighter2.update(delta);
+      this.fighter1.update(effectiveDelta);
+      this.fighter2.update(effectiveDelta);
+
+      // Character body separation: prevent passing through each other on ground
+      var minDist = 48;
+      var dist = this.fighter2.x - this.fighter1.x;
+      if (Math.abs(dist) < minDist && !this.fighter1.isJumping && !this.fighter2.isJumping) {
+        var overlap = (minDist - Math.abs(dist)) * 0.5;
+        if (dist >= 0) {
+          this.fighter1.x = Math.max(70, this.fighter1.x - overlap);
+          this.fighter2.x = Math.min(1210, this.fighter2.x + overlap);
+        } else {
+          this.fighter1.x = Math.min(1210, this.fighter1.x + overlap);
+          this.fighter2.x = Math.max(70, this.fighter2.x - overlap);
+        }
+      }
 
       this.fighter1.checkHit(this.fighter2);
       this.fighter2.checkHit(this.fighter1);
@@ -1104,11 +1434,13 @@
         this.p2ComboText.setText('');
       }
 
-      // Health Check for KO
-      if (this.fighter1.health <= 0) {
-        this.handleRoundEnd(1, 'ko');
-      } else if (this.fighter2.health <= 0) {
-        this.handleRoundEnd(0, 'ko');
+      // Health Check for KO (bypassed during training mode)
+      if (!this.isTraining) {
+        if (this.fighter1.health <= 0) {
+          this.handleRoundEnd(1, 'ko');
+        } else if (this.fighter2.health <= 0) {
+          this.handleRoundEnd(0, 'ko');
+        }
       }
 
       // Host State Sync (every 6 frames in online mode)
@@ -1131,6 +1463,37 @@
         }
       }
     }
+
+    resetTrainingPositions() {
+      if (this.fighter1) {
+        this.fighter1.x = 420;
+        this.fighter1.y = 520;
+        this.fighter1.health = 100;
+        this.fighter1.guardStamina = 100;
+        this.fighter1.energy = 50;
+        this.fighter1.comboCount = 0;
+        this.fighter1.comboDamage = 0;
+        this.fighter1.isGuardBroken = false;
+        this.fighter1.state = 'idle';
+      }
+
+      if (this.fighter2) {
+        this.fighter2.x = 860;
+        this.fighter2.y = 520;
+        this.fighter2.health = 100;
+        this.fighter2.guardStamina = 100;
+        this.fighter2.energy = 50;
+        this.fighter2.comboCount = 0;
+        this.fighter2.comboDamage = 0;
+        this.fighter2.isGuardBroken = false;
+        this.fighter2.state = 'idle';
+      }
+
+      this.p1RecoilHealth = 100;
+      this.p2RecoilHealth = 100;
+      this.inputHistory = [];
+      if (this.inputHistoryText) this.inputHistoryText.setText('INPUT STREAM: RESET');
+    }
   }
 
   // ── Global Interface ─────────────────────────────────────────
@@ -1143,7 +1506,7 @@
       width: 1280,
       height: 720,
       parent: 'game-container',
-      backgroundColor: '#0a0a0f',
+      transparent: true,
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -1155,10 +1518,20 @@
   }
 
   function stopGame() {
+    if (window.SANDAI && window.SANDAI.Audio) {
+      window.SANDAI.Audio.stopAmbience();
+    }
+    if (currentScene && currentScene.renderer3d) {
+      try {
+        currentScene.renderer3d.destroy();
+      } catch (e) { }
+      currentScene.renderer3d = null;
+    }
     if (gameInstance) {
       gameInstance.destroy(true);
       gameInstance = null;
       currentScene = null;
+      window.SANDAI.activeFightScene = null;
     }
     if (window.SANDAI.Controls) {
       window.SANDAI.Controls.destroyKeyboard();

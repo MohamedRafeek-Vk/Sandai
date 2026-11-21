@@ -29,52 +29,61 @@
   };
 
   // Player 2:
-  // Arrows: Move/Jump/Block | 1: Punch | 2: Kick | 3: Special
+  // Arrows: Move/Jump/Block | 1: Punch | 2: Kick | 3: Special (Supports top row & numpad)
   var KEY_MAP_P2 = {
     'arrowleft': 'left', 'arrowright': 'right', 'arrowup': 'jump', 'arrowdown': 'block',
-    '1': 'punch', '2': 'kick', '3': 'special'
+    '1': 'punch', 'digit1': 'punch', 'numpad1': 'punch',
+    '2': 'kick', 'digit2': 'kick', 'numpad2': 'kick',
+    '3': 'special', 'digit3': 'special', 'numpad3': 'special'
   };
 
   var keysDown = {};
 
   // ── Keyboard Event Handlers ────────────────────────────────
   function onKeyDown(e) {
-    var key = e.key.toLowerCase();
-    if (keysDown[key]) return;
-    keysDown[key] = true;
+    var key = (e.key || '').toLowerCase();
+    var code = (e.code || '').toLowerCase();
+    var ident = code || key;
+
+    if (keysDown[ident]) return;
+    keysDown[ident] = true;
 
     // Player 1
-    if (KEY_MAP_P1[key]) {
-      var action = KEY_MAP_P1[key];
-      inputState.p1[action] = true;
-      if (action === 'punch' || action === 'kick' || action === 'special' || action === 'jump') {
-        inputPressed.p1[action] = true;
+    var actionP1 = KEY_MAP_P1[key] || KEY_MAP_P1[code];
+    if (actionP1) {
+      inputState.p1[actionP1] = true;
+      if (actionP1 === 'punch' || actionP1 === 'kick' || actionP1 === 'special' || actionP1 === 'jump') {
+        inputPressed.p1[actionP1] = true;
       }
     }
 
     // Player 2
-    if (KEY_MAP_P2[key]) {
-      var action2 = KEY_MAP_P2[key];
-      inputState.p2[action2] = true;
-      if (action2 === 'punch' || action2 === 'kick' || action2 === 'special' || action2 === 'jump') {
-        inputPressed.p2[action2] = true;
+    var actionP2 = KEY_MAP_P2[key] || KEY_MAP_P2[code];
+    if (actionP2) {
+      inputState.p2[actionP2] = true;
+      if (actionP2 === 'punch' || actionP2 === 'kick' || actionP2 === 'special' || actionP2 === 'jump') {
+        inputPressed.p2[actionP2] = true;
       }
     }
 
-    if (KEY_MAP_P1[key] || KEY_MAP_P2[key]) {
+    if (actionP1 || actionP2) {
       e.preventDefault();
     }
   }
 
   function onKeyUp(e) {
-    var key = e.key.toLowerCase();
-    keysDown[key] = false;
+    var key = (e.key || '').toLowerCase();
+    var code = (e.code || '').toLowerCase();
+    var ident = code || key;
+    keysDown[ident] = false;
 
-    if (KEY_MAP_P1[key]) {
-      inputState.p1[KEY_MAP_P1[key]] = false;
+    var actionP1 = KEY_MAP_P1[key] || KEY_MAP_P1[code];
+    if (actionP1) {
+      inputState.p1[actionP1] = false;
     }
-    if (KEY_MAP_P2[key]) {
-      inputState.p2[KEY_MAP_P2[key]] = false;
+    var actionP2 = KEY_MAP_P2[key] || KEY_MAP_P2[code];
+    if (actionP2) {
+      inputState.p2[actionP2] = false;
     }
   }
 
@@ -92,13 +101,31 @@
     keyboardActive = false;
     window.removeEventListener('keydown', onKeyDown, { capture: true });
     window.removeEventListener('keyup', onKeyUp, { capture: true });
+    resetAllInputs();
+  }
+
+  // ── Reset Held Inputs On Focus Loss (Stage 4) ────────────────
+  function resetAllInputs() {
     keysDown = {};
+    touchIds = {};
     var actions = ['left', 'right', 'jump', 'block', 'punch', 'kick', 'special'];
     for (var i = 0; i < actions.length; i++) {
       inputState.p1[actions[i]] = false;
       inputState.p2[actions[i]] = false;
+      if (inputPressed.p1[actions[i]] !== undefined) inputPressed.p1[actions[i]] = false;
+      if (inputPressed.p2[actions[i]] !== undefined) inputPressed.p2[actions[i]] = false;
+    }
+    if (touchContainer) {
+      var pressedBtns = touchContainer.querySelectorAll('.touch-pressed');
+      pressedBtns.forEach(function (btn) { btn.classList.remove('touch-pressed'); });
     }
   }
+
+  // Automatically reset held inputs when app loses focus or tab becomes inactive
+  window.addEventListener('blur', resetAllInputs);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) resetAllInputs();
+  });
 
   // ── Mobile Touch Multi-Touch Controls ───────────────────────
   var touchContainer = null;
@@ -395,6 +422,7 @@
     getP2Input: getP2Input,
     clearPressed: clearPressed,
     inputState: inputState,
+    resetAllInputs: resetAllInputs,
     toggleFullscreen: toggleFullscreen,
     initMobileOptimizations: initMobileOptimizations
   };
