@@ -41,8 +41,8 @@
 
     create() {
       var self = this;
-      var W = 1280;
-      var H = 720;
+      var W = this.scale.width || 1280;
+      var H = this.scale.height || 720;
 
       // Register animations for all 8 characters
       this.registerAllFighterAnimations();
@@ -126,6 +126,11 @@
       // Build HUD
       this.createHUD(W, H);
 
+      // Handle dynamic canvas resizing (Landscape rotation / Viewport changes)
+      this.scale.on('resize', function (gameSize) {
+        self.onGameResize(gameSize.width, gameSize.height);
+      });
+
       window.SANDAI.activeFightScene = this;
 
       // Controls Setup
@@ -143,6 +148,32 @@
 
       // Start Round 1
       this.startRound(1);
+    }
+
+    onGameResize(newW, newH) {
+      var W = newW || this.scale.width;
+      var H = newH || this.scale.height;
+      var isMobile = (window.SANDAI && window.SANDAI.deviceType === 'mobile') || W < 950;
+
+      var p1PortX = isMobile ? 28 : 55;
+      var p1PortY = isMobile ? 32 : 52;
+      var p1TextX = isMobile ? 52 : 95;
+      var p2PortX = W - (isMobile ? 28 : 55);
+      var p2PortY = isMobile ? 32 : 52;
+      var p2TextX = W - (isMobile ? 52 : 95);
+
+      if (this.p1PortraitImg) this.p1PortraitImg.setPosition(p1PortX, p1PortY);
+      if (this.p2PortraitImg) this.p2PortraitImg.setPosition(p2PortX, p2PortY);
+      if (this.p1NameText) this.p1NameText.setPosition(p1TextX, isMobile ? 12 : 24);
+      if (this.p1StyleText) this.p1StyleText.setPosition(p1TextX, isMobile ? 30 : 52);
+      if (this.p2NameText) this.p2NameText.setPosition(p2TextX, isMobile ? 12 : 24);
+      if (this.p2StyleText) this.p2StyleText.setPosition(p2TextX, isMobile ? 30 : 52);
+      if (this.timerText) this.timerText.setPosition(W / 2, isMobile ? 32 : 48);
+      if (this.announcementText) this.announcementText.setPosition(W / 2, isMobile ? (H / 2 - 40) : (H / 2 - 60));
+      if (this.p1ComboText) this.p1ComboText.setPosition(isMobile ? 50 : 120, isMobile ? 90 : 175);
+      if (this.p2ComboText) this.p2ComboText.setPosition(W - (isMobile ? 50 : 120), isMobile ? 90 : 175);
+
+      this.drawHUD(W, H);
     }
 
     // ── Animation Registration ────────────────────────────────
@@ -776,92 +807,92 @@
       var p2Data = window.SANDAI.CHARACTERS[this.p2CharId] || window.SANDAI.CHARACTERS[1];
       var isMobile = (window.SANDAI && window.SANDAI.deviceType === 'mobile') || W < 950;
 
-      var p1PortX = isMobile ? 36 : 55;
-      var p1PortY = isMobile ? 44 : 52;
-      var portSize = isMobile ? 50 : 64;
-      var p1TextX = isMobile ? 68 : 95;
+      var p1PortX = isMobile ? 28 : 55;
+      var p1PortY = isMobile ? 32 : 52;
+      var portSize = isMobile ? 38 : 64;
+      var p1TextX = isMobile ? 52 : 95;
 
-      var p2PortX = W - (isMobile ? 36 : 55);
-      var p2PortY = isMobile ? 44 : 52;
-      var p2TextX = W - (isMobile ? 68 : 95);
+      var p2PortX = W - (isMobile ? 28 : 55);
+      var p2PortY = isMobile ? 32 : 52;
+      var p2TextX = W - (isMobile ? 52 : 95);
 
       // P1 Portrait & Angled Frame
       if (this.textures.exists('portrait_' + p1Data.name)) {
-        this.add.image(p1PortX, p1PortY, 'portrait_' + p1Data.name).setDisplaySize(portSize, portSize).setDepth(101);
+        this.p1PortraitImg = this.add.image(p1PortX, p1PortY, 'portrait_' + p1Data.name).setDisplaySize(portSize, portSize).setDepth(101);
       }
       // Strict Name Purity: Plain original character name only!
-      this.p1NameText = this.add.text(p1TextX, isMobile ? 18 : 24, p1Data.name.toUpperCase(), {
+      this.p1NameText = this.add.text(p1TextX, isMobile ? 12 : 24, p1Data.name.toUpperCase(), {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: isMobile ? '20px' : '26px',
+        fontSize: isMobile ? '16px' : '26px',
         fontWeight: '700',
         color: '#ffffff'
       }).setDepth(101);
-      this.p1StyleText = this.add.text(p1TextX, isMobile ? 42 : 52, p1Data.style, {
+      this.p1StyleText = this.add.text(p1TextX, isMobile ? 30 : 52, p1Data.style, {
         fontFamily: 'Inter, sans-serif',
-        fontSize: isMobile ? '10px' : '11px',
+        fontSize: isMobile ? '9px' : '11px',
         color: '#00f0ff'
       }).setDepth(101);
 
       // P2 Portrait & Angled Frame
       if (this.textures.exists('portrait_' + p2Data.name)) {
-        this.add.image(p2PortX, p2PortY, 'portrait_' + p2Data.name).setDisplaySize(portSize, portSize).setDepth(101);
+        this.p2PortraitImg = this.add.image(p2PortX, p2PortY, 'portrait_' + p2Data.name).setDisplaySize(portSize, portSize).setDepth(101);
       }
-      this.p2NameText = this.add.text(p2TextX, isMobile ? 18 : 24, p2Data.name.toUpperCase(), {
+      this.p2NameText = this.add.text(p2TextX, isMobile ? 12 : 24, p2Data.name.toUpperCase(), {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: isMobile ? '20px' : '26px',
+        fontSize: isMobile ? '16px' : '26px',
         fontWeight: '700',
         color: '#ffffff'
       }).setOrigin(1, 0).setDepth(101);
-      this.p2StyleText = this.add.text(p2TextX, isMobile ? 42 : 52, p2Data.style, {
+      this.p2StyleText = this.add.text(p2TextX, isMobile ? 30 : 52, p2Data.style, {
         fontFamily: 'Inter, sans-serif',
-        fontSize: isMobile ? '10px' : '11px',
+        fontSize: isMobile ? '9px' : '11px',
         color: '#ff1744'
       }).setOrigin(1, 0).setDepth(101);
 
       // Central Hexagonal Timer Display
-      this.timerText = this.add.text(W / 2, isMobile ? 42 : 48, this.isTraining ? '∞' : '99', {
+      this.timerText = this.add.text(W / 2, isMobile ? 32 : 48, this.isTraining ? '∞' : '99', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: isMobile ? '38px' : '48px',
+        fontSize: isMobile ? '32px' : '48px',
         fontWeight: 'bold',
         color: '#ffffff'
       }).setOrigin(0.5).setDepth(102);
 
       // Round & Match Announcement Text (Centered)
-      this.announcementText = this.add.text(W / 2, H / 2 - 60, '', {
+      this.announcementText = this.add.text(W / 2, isMobile ? (H / 2 - 40) : (H / 2 - 60), '', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: isMobile ? '52px' : '76px',
+        fontSize: isMobile ? '38px' : '76px',
         fontWeight: 'bold',
         color: '#ffd700',
         stroke: '#000000',
-        strokeThickness: isMobile ? 6 : 8
+        strokeThickness: isMobile ? 5 : 8
       }).setOrigin(0.5).setDepth(200);
 
       // Combo Texts with dynamic damage badge
-      this.p1ComboText = this.add.text(isMobile ? 70 : 120, isMobile ? 140 : 175, '', {
+      this.p1ComboText = this.add.text(isMobile ? 50 : 120, isMobile ? 90 : 175, '', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: isMobile ? '26px' : '34px',
+        fontSize: isMobile ? '20px' : '34px',
         fontWeight: 'bold',
         color: '#ff6b35'
       }).setDepth(101);
 
-      this.p2ComboText = this.add.text(W - (isMobile ? 70 : 120), isMobile ? 140 : 175, '', {
+      this.p2ComboText = this.add.text(W - (isMobile ? 50 : 120), isMobile ? 90 : 175, '', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: isMobile ? '26px' : '34px',
+        fontSize: isMobile ? '20px' : '34px',
         fontWeight: 'bold',
         color: '#ff6b35'
       }).setOrigin(1, 0).setDepth(101);
 
       // Bottom Super Energy Meter Banner Texts
-      this.p1SuperText = this.add.text(isMobile ? (W / 2 - 95) : 95, isMobile ? (H - 42) : (H - 54), 'ENERGY: 0%', {
+      this.p1SuperText = this.add.text(isMobile ? (W / 2 - 75) : 95, isMobile ? (H - 28) : (H - 54), 'ENERGY: 0%', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: isMobile ? '11px' : '13px',
+        fontSize: isMobile ? '10px' : '13px',
         fontWeight: '700',
         color: '#00f0ff'
       }).setOrigin(isMobile ? 0.5 : 0, 0).setDepth(101);
 
-      this.p2SuperText = this.add.text(isMobile ? (W / 2 + 95) : (W - 95), isMobile ? (H - 42) : (H - 54), 'ENERGY: 0%', {
+      this.p2SuperText = this.add.text(isMobile ? (W / 2 + 75) : (W - 95), isMobile ? (H - 28) : (H - 54), 'ENERGY: 0%', {
         fontFamily: 'Rajdhani, sans-serif',
-        fontSize: isMobile ? '11px' : '13px',
+        fontSize: isMobile ? '10px' : '13px',
         fontWeight: '700',
         color: '#ff1744'
       }).setOrigin(isMobile ? 0.5 : 1, 0).setDepth(101);
@@ -905,12 +936,12 @@
 
       // Health Bar Dimensions (Tekken 8 / MK11 angled look)
       var isMobile = (window.SANDAI && window.SANDAI.deviceType === 'mobile') || W < 950;
-      var p1BarX = isMobile ? 68 : 95;
-      var timerGap = isMobile ? 80 : 120;
+      var p1BarX = isMobile ? 52 : 95;
+      var timerGap = isMobile ? 64 : 120;
       var maxHalf = (W / 2) - p1BarX - (timerGap / 2);
-      var barW = Math.min(450, Math.max(160, maxHalf));
-      var barH = isMobile ? 22 : 26;
-      var barY = isMobile ? 60 : 72;
+      var barW = Math.min(450, Math.max(130, maxHalf));
+      var barH = isMobile ? 14 : 26;
+      var barY = isMobile ? 26 : 72;
       var p2BarX = W - p1BarX - barW;
 
       // ── P1 HEALTH BAR ──
@@ -937,9 +968,9 @@
       }
 
       // P1 Guard Stamina Meter (Underneath health bar)
-      var guardW = 320;
-      var guardH = 5;
-      var guardY = barY + barH + 4;
+      var guardW = isMobile ? Math.min(200, Math.round(barW * 0.75)) : 320;
+      var guardH = isMobile ? 3 : 5;
+      var guardY = barY + barH + 3;
       g.fillStyle(0x161824, 0.9);
       g.fillRect(p1BarX, guardY, guardW, guardH);
       var p1GuardRatio = Math.max(0, (this.fighter1.guardStamina || 100) / 100);
@@ -949,14 +980,15 @@
 
       // P1 Round Win Diamonds (Dragon gem pips)
       for (var r1 = 0; r1 < 2; r1++) {
-        var dotX = p1BarX + barW - 35 + r1 * 24;
+        var dotX = p1BarX + barW - (isMobile ? 22 : 35) + r1 * (isMobile ? 15 : 24);
         var r1Won = r1 < this.p1RoundWins;
+        var rRad = isMobile ? 4 : 7;
         g.fillStyle(r1Won ? 0xffd700 : 0x242838, 1);
-        g.fillTriangle(dotX, guardY - 2, dotX + 7, guardY + 5, dotX - 7, guardY + 5);
-        g.fillTriangle(dotX, guardY + 12, dotX + 7, guardY + 5, dotX - 7, guardY + 5);
+        g.fillTriangle(dotX, guardY - 2, dotX + rRad, guardY + rRad, dotX - rRad, guardY + rRad);
+        g.fillTriangle(dotX, guardY + rRad * 2, dotX + rRad, guardY + rRad, dotX - rRad, guardY + rRad);
         if (r1Won) {
           g.lineStyle(1.5, 0xffffff, 0.9);
-          g.strokeCircle(dotX, guardY + 5, 8);
+          g.strokeCircle(dotX, guardY + rRad, rRad + 1);
         }
       }
 
@@ -992,24 +1024,25 @@
 
       // P2 Round Win Diamonds (Dragon gem pips)
       for (var r2 = 0; r2 < 2; r2++) {
-        var dotX2 = p2BarX + 15 + r2 * 24;
+        var dotX2 = p2BarX + (isMobile ? 8 : 15) + r2 * (isMobile ? 15 : 24);
         var r2Won = r2 < this.p2RoundWins;
+        var rRad2 = isMobile ? 4 : 7;
         g.fillStyle(r2Won ? 0xffd700 : 0x242838, 1);
-        g.fillTriangle(dotX2, guardY - 2, dotX2 + 7, guardY + 5, dotX2 - 7, guardY + 5);
-        g.fillTriangle(dotX2, guardY + 12, dotX2 + 7, guardY + 5, dotX2 - 7, guardY + 5);
+        g.fillTriangle(dotX2, guardY - 2, dotX2 + rRad2, guardY + rRad2, dotX2 - rRad2, guardY + rRad2);
+        g.fillTriangle(dotX2, guardY + rRad2 * 2, dotX2 + rRad2, guardY + rRad2, dotX2 - rRad2, guardY + rRad2);
         if (r2Won) {
           g.lineStyle(1.5, 0xffffff, 0.9);
-          g.strokeCircle(dotX2, guardY + 5, 8);
+          g.strokeCircle(dotX2, guardY + rRad2, rRad2 + 1);
         }
       }
 
       // ── BOTTOM SUPER ENERGY GAUGES (0-100% with Special Ready Glow) ──
-      var gaugeW = isMobile ? Math.min(180, (W / 2) - 45) : Math.min(320, barW);
-      var gaugeH = isMobile ? 12 : 16;
-      var gaugeY = isMobile ? (H - 26) : (H - 36);
+      var gaugeW = isMobile ? Math.min(130, (W / 2) - 30) : Math.min(320, barW);
+      var gaugeH = isMobile ? 8 : 16;
+      var gaugeY = isMobile ? (H - 16) : (H - 36);
 
-      var p1GaugeX = isMobile ? ((W / 2) - gaugeW - 12) : p1BarX;
-      var p2GaugeX = isMobile ? ((W / 2) + 12) : (p2BarX + barW - gaugeW);
+      var p1GaugeX = isMobile ? ((W / 2) - gaugeW - 8) : p1BarX;
+      var p2GaugeX = isMobile ? ((W / 2) + 8) : (p2BarX + barW - gaugeW);
 
       // P1 Super Gauge (Left)
       var p1Energy = Math.max(0, Math.min(100, this.fighter1.energy || 0));
@@ -1029,14 +1062,14 @@
 
       if (this.p1SuperText) {
         if (isMobile) {
-          this.p1SuperText.setPosition(p1GaugeX + gaugeW / 2, gaugeY - 14).setOrigin(0.5, 0);
+          this.p1SuperText.setPosition(p1GaugeX + gaugeW / 2, gaugeY - 13).setOrigin(0.5, 0);
         } else {
           this.p1SuperText.setPosition(p1BarX, H - 54).setOrigin(0, 0);
         }
         if (p1Energy >= 100) {
-          this.p1SuperText.setText('★ MAX SPECIAL READY ★').setColor('#ffd700');
+          this.p1SuperText.setText('★ MAX SUPER ★').setColor('#ffd700');
         } else if (p1Energy >= 50) {
-          this.p1SuperText.setText('⚡ SPECIAL READY (' + Math.round(p1Energy) + '%)').setColor('#00ff88');
+          this.p1SuperText.setText('⚡ SPECIAL (' + Math.round(p1Energy) + '%)').setColor('#00ff88');
         } else {
           this.p1SuperText.setText('ENERGY: ' + Math.round(p1Energy) + '%').setColor('#00f0ff');
         }
@@ -1052,21 +1085,21 @@
       var p2EnergyFillW = gaugeW * (p2Energy / 100);
       if (p2EnergyFillW > 0) {
         g.fillStyle(p2Energy >= 50 ? 0xffd700 : 0xff1744, 1);
-        g.fillRoundedRect(p2GaugeX + barW - p2EnergyFillW, gaugeY, p2EnergyFillW, gaugeH, 3);
+        g.fillRoundedRect(p2GaugeX + (gaugeW - p2EnergyFillW), gaugeY, p2EnergyFillW, gaugeH, 3);
       }
       g.fillStyle(0xffffff, 0.9);
       g.fillRect(p2GaugeX + gaugeW * 0.5 - 1, gaugeY, 2, gaugeH);
 
       if (this.p2SuperText) {
         if (isMobile) {
-          this.p2SuperText.setPosition(p2GaugeX + gaugeW / 2, gaugeY - 14).setOrigin(0.5, 0);
+          this.p2SuperText.setPosition(p2GaugeX + gaugeW / 2, gaugeY - 13).setOrigin(0.5, 0);
         } else {
           this.p2SuperText.setPosition(p2BarX + barW, H - 54).setOrigin(1, 0);
         }
         if (p2Energy >= 100) {
-          this.p2SuperText.setText('★ MAX SPECIAL READY ★').setColor('#ffd700');
+          this.p2SuperText.setText('★ MAX SUPER ★').setColor('#ffd700');
         } else if (p2Energy >= 50) {
-          this.p2SuperText.setText('⚡ SPECIAL READY (' + Math.round(p2Energy) + '%)').setColor('#00ff88');
+          this.p2SuperText.setText('⚡ SPECIAL (' + Math.round(p2Energy) + '%)').setColor('#00ff88');
         } else {
           this.p2SuperText.setText('ENERGY: ' + Math.round(p2Energy) + '%').setColor('#ff1744');
         }
@@ -1295,7 +1328,7 @@
       var effectiveDelta = this.isSlowMo ? (delta * 0.28) : delta;
 
       this.updateArenaParticles(effectiveDelta);
-      this.drawHUD(1280, 720);
+      this.drawHUD(this.scale.width, this.scale.height);
 
       // Synchronize 3D articulated fighters and skeletal animations with 2.5D game physics
       if (this.renderer3d) {
@@ -1555,10 +1588,26 @@
   function startGame() {
     stopGame();
 
+    var isMobile = (window.SANDAI && window.SANDAI.deviceType === 'mobile') ||
+      /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) ||
+      (window.innerWidth <= 900);
+
+    var curW = window.innerWidth;
+    var curH = window.innerHeight;
+    var gc = document.getElementById('game-container');
+    if (gc && gc.clientWidth > 0 && gc.clientHeight > 0) {
+      curW = gc.clientWidth;
+      curH = gc.clientHeight;
+    }
+    var aspect = Math.max(1.2, curW / Math.max(1, curH));
+    var virtW = isMobile ? Math.round(720 * aspect) : 1280;
+    var virtH = 720;
+
     var config = {
       type: Phaser.AUTO,
-      width: 1280,
-      height: 720,
+      width: virtW,
+      height: virtH,
       parent: 'game-container',
       transparent: true,
       scale: {

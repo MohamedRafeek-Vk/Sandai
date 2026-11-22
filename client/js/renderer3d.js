@@ -1319,15 +1319,18 @@
     var aspect = (this.container && this.container.clientHeight > 0) ?
       (this.container.clientWidth / this.container.clientHeight) : 1.77;
 
-    // Mobile camera elevation: lift target slightly higher so fighters' feet stay well above touch buttons
-    var elev = isMobile ? 1.52 : 1.35;
+    // Mobile camera elevation: centered on fighter mid-torso for natural framing
+    var elev = isMobile ? 1.05 : 1.35;
     var midY = (p1Pos.y + p2Pos.y) / 2 + elev;
     var dist = Math.abs(p1Pos.x - p2Pos.x);
 
     // Dynamic zoom based on combat range & screen aspect ratio
-    var minD = isMobile ? 6.2 : 5.4;
-    var maxD = isMobile ? 9.8 : 8.6;
-    var targetDist = Math.max(minD, Math.min(maxD, dist * 1.35 + 2.9));
+    // Authentic fighting game ratio: fighters occupy ~26-30% of screen height
+    var minD = isMobile ? 8.2 : 5.4;
+    var maxD = isMobile ? 12.8 : 8.6;
+    var targetDist = isMobile ?
+      Math.max(minD, Math.min(maxD, dist * 1.05 + 4.8)) :
+      Math.max(minD, Math.min(maxD, dist * 1.35 + 2.9));
 
     // Dynamic aspect ratio compensation: widen distance if aspect ratio is narrower (< 1.75)
     if (aspect < 1.75) {
@@ -1335,14 +1338,14 @@
     }
 
     if (this.isCinematicCloseUp) {
-      targetDist = isMobile ? 4.8 : 4.2;
-      midY = isMobile ? 1.35 : 1.15;
+      targetDist = isMobile ? 6.2 : 4.2;
+      midY = isMobile ? 1.0 : 1.15;
       this.cinematicTimer -= delta;
       if (this.cinematicTimer <= 0) this.isCinematicCloseUp = false;
     }
 
     // Spring-damper smooth tracking
-    var camYOffset = isMobile ? 0.52 : 0.35;
+    var camYOffset = isMobile ? 0.28 : 0.35;
     this.camera.position.x = THREE.MathUtils.damp(this.camera.position.x, midX, 6.0, delta);
     this.camera.position.y = THREE.MathUtils.damp(this.camera.position.y, midY + camYOffset, 6.0, delta);
     this.camera.position.z = THREE.MathUtils.damp(this.camera.position.z, targetDist, 5.0, delta);

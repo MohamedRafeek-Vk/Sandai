@@ -532,9 +532,14 @@
         var gc = document.getElementById('game-container');
         var gw = (gc && gc.clientWidth > 0) ? gc.clientWidth : window.innerWidth;
         var gh = (gc && gc.clientHeight > 0) ? gc.clientHeight : window.innerHeight;
-        window.SANDAI.activeFightScene.scale.resize(gw, gh);
-        if (typeof window.SANDAI.activeFightScene.drawHUD === 'function') {
-          window.SANDAI.activeFightScene.drawHUD(gw, gh);
+        var aspect = Math.max(1.2, gw / Math.max(1, gh));
+        var targetW = isMobile ? Math.round(720 * aspect) : 1280;
+        var targetH = 720;
+        window.SANDAI.activeFightScene.scale.resize(targetW, targetH);
+        if (typeof window.SANDAI.activeFightScene.onGameResize === 'function') {
+          window.SANDAI.activeFightScene.onGameResize(targetW, targetH);
+        } else if (typeof window.SANDAI.activeFightScene.drawHUD === 'function') {
+          window.SANDAI.activeFightScene.drawHUD(targetW, targetH);
         }
       }
     } else {

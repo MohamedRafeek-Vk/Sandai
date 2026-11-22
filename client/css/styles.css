@@ -3447,16 +3447,18 @@ button {
 
   /* ── 6. COMBAT SCREEN TOP ACTIONS (Repositioned to Top Center) ── */
   .arena-top-actions {
-    top: calc(8px + var(--safe-top)) !important;
-    left: calc(50% + 56px) !important;
+    top: calc(6px + var(--safe-top)) !important;
+    left: calc(50% + 46px) !important;
     right: auto !important;
     transform: none !important;
     z-index: 110 !important;
+    gap: 4px !important;
   }
 
   .btn-arena-action {
-    width: 36px !important;
-    height: 36px !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.82rem !important;
   }
 
   /* ── 7. MOBILE TOUCH CONTROLS (Ergonomic Circular Gaming Buttons) ── */
@@ -3467,22 +3469,22 @@ button {
   }
 
   .touch-panel-left {
-    bottom: calc(10px + var(--safe-bottom)) !important;
-    left: calc(10px + var(--safe-left)) !important;
-    grid-template-columns: repeat(3, 58px) !important;
-    grid-template-rows: repeat(3, 58px) !important;
+    bottom: calc(8px + var(--safe-bottom)) !important;
+    left: calc(8px + var(--safe-left)) !important;
+    grid-template-columns: repeat(3, clamp(34px, min(9.2vh, 4.8vw), 44px)) !important;
+    grid-template-rows: repeat(3, clamp(34px, min(9.2vh, 4.8vw), 44px)) !important;
     gap: 4px !important;
   }
 
   .touch-panel-right {
-    bottom: calc(10px + var(--safe-bottom)) !important;
-    right: calc(10px + var(--safe-right)) !important;
-    gap: 8px !important;
+    bottom: calc(8px + var(--safe-bottom)) !important;
+    right: calc(8px + var(--safe-right)) !important;
+    gap: clamp(4px, 1vh, 7px) !important;
   }
 
   .touch-row-top,
   .touch-row-bottom {
-    gap: 8px !important;
+    gap: clamp(4px, 1vw, 7px) !important;
   }
 
   .touch-btn {
@@ -3501,16 +3503,16 @@ button {
   }
 
   .touch-icon {
-    font-size: 1.25rem !important;
+    font-size: clamp(0.9rem, min(3vh, 2.6vw), 1.15rem) !important;
     line-height: 1 !important;
     pointer-events: none;
   }
 
   .touch-lbl {
     font-family: var(--font-heading) !important;
-    font-size: 0.52rem !important;
+    font-size: clamp(0.4rem, min(1.3vh, 1.1vw), 0.5rem) !important;
     font-weight: 800 !important;
-    letter-spacing: 0.06em !important;
+    letter-spacing: 0.05em !important;
     opacity: 0.85 !important;
     text-transform: uppercase !important;
     pointer-events: none;
@@ -3523,14 +3525,14 @@ button {
     box-shadow: 0 0 25px currentColor !important;
   }
 
-  .btn-touch-punch   { border-color: var(--neon-cyan) !important; color: var(--neon-cyan) !important; width: 62px !important; height: 62px !important; }
-  .btn-touch-kick    { border-color: var(--blaze-orange) !important; color: var(--blaze-orange) !important; width: 62px !important; height: 62px !important; }
-  .btn-touch-special { border-color: #ffd700 !important; color: #ffd700 !important; width: 56px !important; height: 56px !important; }
-  .btn-touch-block   { border-color: #7c4dff !important; color: #7c4dff !important; width: 56px !important; height: 56px !important; }
-  .btn-touch-dodge   { border-color: #e040fb !important; color: #e040fb !important; width: 56px !important; height: 56px !important; }
-  .btn-touch-jump    { border-color: #00ff88 !important; color: #00ff88 !important; width: 58px !important; height: 58px !important; }
-  .btn-touch-crouch  { border-color: #00e5ff !important; color: #00e5ff !important; width: 58px !important; height: 58px !important; }
-  .btn-touch-move    { border-color: #00e5ff !important; color: #00e5ff !important; width: 58px !important; height: 58px !important; }
+  .btn-touch-punch   { border-color: var(--neon-cyan) !important; color: var(--neon-cyan) !important; width: clamp(38px, min(10.2vh, 5.8vw), 48px) !important; height: clamp(38px, min(10.2vh, 5.8vw), 48px) !important; }
+  .btn-touch-kick    { border-color: var(--blaze-orange) !important; color: var(--blaze-orange) !important; width: clamp(38px, min(10.2vh, 5.8vw), 48px) !important; height: clamp(38px, min(10.2vh, 5.8vw), 48px) !important; }
+  .btn-touch-special { border-color: #ffd700 !important; color: #ffd700 !important; width: clamp(34px, min(9.2vh, 5.2vw), 42px) !important; height: clamp(34px, min(9.2vh, 5.2vw), 42px) !important; }
+  .btn-touch-block   { border-color: #7c4dff !important; color: #7c4dff !important; width: clamp(32px, min(8.6vh, 4.8vw), 40px) !important; height: clamp(32px, min(8.6vh, 4.8vw), 40px) !important; }
+  .btn-touch-dodge   { border-color: #e040fb !important; color: #e040fb !important; width: clamp(32px, min(8.6vh, 4.8vw), 40px) !important; height: clamp(32px, min(8.6vh, 4.8vw), 40px) !important; }
+  .btn-touch-jump    { border-color: #00ff88 !important; color: #00ff88 !important; width: clamp(34px, min(9.2vh, 4.8vw), 44px) !important; height: clamp(34px, min(9.2vh, 4.8vw), 44px) !important; }
+  .btn-touch-crouch  { border-color: #00e5ff !important; color: #00e5ff !important; width: clamp(34px, min(9.2vh, 4.8vw), 44px) !important; height: clamp(34px, min(9.2vh, 4.8vw), 44px) !important; }
+  .btn-touch-move    { border-color: #00e5ff !important; color: #00e5ff !important; width: clamp(34px, min(9.2vh, 4.8vw), 44px) !important; height: clamp(34px, min(9.2vh, 4.8vw), 44px) !important; }
 
   /* ── 8. CONTROLS GUIDE (Mobile Layout) ── */
   .screen-guide-arcade {
@@ -3556,6 +3558,51 @@ button {
     width: 100% !important;
     height: 50px !important;
     font-size: 1.2rem !important;
+  }
+
+  /* ── 9. WINNER / DEFEAT SCREEN (Compact Mobile Landscape Layout) ── */
+  .winner-arcade-content {
+    gap: 0.5rem !important;
+    padding: calc(6px + var(--safe-top)) 1rem calc(10px + var(--safe-bottom)) 1rem !important;
+  }
+
+  .winner-badge {
+    font-size: 0.85rem !important;
+    letter-spacing: 0.15em !important;
+  }
+
+  .winner-portrait-wrap {
+    width: 80px !important;
+    height: 80px !important;
+    border-width: 2px !important;
+  }
+
+  .winner-name {
+    font-size: 2rem !important;
+    line-height: 1 !important;
+  }
+
+  .match-stats {
+    gap: 0.8rem !important;
+    margin: 0.2rem 0 !important;
+  }
+
+  .stat-item .stat-value {
+    font-size: 1.2rem !important;
+  }
+
+  .stat-item .stat-label-text {
+    font-size: 0.65rem !important;
+  }
+
+  .winner-actions {
+    gap: 0.6rem !important;
+  }
+
+  .winner-actions .btn-arcade {
+    height: 38px !important;
+    font-size: 0.95rem !important;
+    padding: 0 1.2rem !important;
   }
 }
 
