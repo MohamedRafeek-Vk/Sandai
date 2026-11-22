@@ -265,13 +265,13 @@ test('Kick completes 35-frame recovery and transitions smoothly back to idle', (
 });
 
 // ------------------------------------------------------------
-// 5. Verify All 8 Characters and AI Support Kick
+// 5. Verify All 10 Characters and AI Support Kick
 // ------------------------------------------------------------
 console.log('\n--- 5. Testing Character Roster & AI Support ---');
 
-const charNames = ['Abilash', 'Anas', 'Dhinesh', 'Farook', 'Kiran', 'Nawin', 'Rafeek', 'Tharun'];
+const charNames = ['Abilash', 'Anas', 'Dhinesh', 'Farook', 'Kiran', 'Nawin', 'Rafeek', 'Tharun', 'Dharsan', 'Yuga'];
 
-test('All 8 characters execute kick with character-specific power scaling', () => {
+test('All 10 characters execute kick with character-specific power scaling', () => {
   charNames.forEach((name, id) => {
     const f = new Fighter(null, id, 0, 100, 300);
     f.kick();

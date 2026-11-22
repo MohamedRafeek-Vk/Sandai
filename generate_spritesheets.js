@@ -329,6 +329,52 @@ const CHARACTERS = [
     boots: [215, 165, 125],    // Barefoot with red alta & gold anklets
     wraps: [230, 190, 45],     // Sacred gold kadas/bangles
     specialColor: [255, 225, 80], // Radiant Divine Trident
+  },
+  {
+    name: 'dharsan',
+    displayName: 'Dharsan',
+    style: 'Azure Flame',
+    skin: [210, 155, 120],
+    hairColor: [26, 22, 20],
+    hairType: 'dense_curls',
+    eyes: [255, 170, 0], // Golden amber eyes
+    facialHair: 'stubble',
+    specialFeature: 'amber_flame',
+    costume: 'open_karate_gi',
+    torsoR: 17,
+    hipR: 15,
+    limbScale: 1.01,
+    specialType: 'azure_dragon',
+    primary: [0, 180, 216],     // Azure Cyan
+    secondary: [255, 111, 0],   // Amber flame trim
+    belt: [20, 20, 20],
+    pants: [25, 35, 45],
+    boots: [0, 119, 182],
+    wraps: [0, 229, 255],       // Cyan flame gauntlets
+    specialColor: [0, 229, 255]
+  },
+  {
+    name: 'yuga',
+    displayName: 'Yuga',
+    style: 'Ignite Horizon',
+    skin: [200, 142, 112],
+    hairColor: [24, 21, 19],
+    hairType: 'curls',
+    eyes: [255, 140, 0],
+    facialHair: 'trimmed_beard',
+    specialFeature: 'aviator_glasses',
+    costume: 'changshan_tunic',
+    torsoR: 17,
+    hipR: 15,
+    limbScale: 1.02,
+    specialType: 'infernal_blast',
+    primary: [255, 61, 0],      // Blazing Crimson
+    secondary: [55, 71, 79],    // Charcoal Titanium
+    belt: [38, 50, 56],
+    pants: [33, 33, 33],
+    boots: [45, 45, 45],
+    wraps: [255, 69, 0],        // Crimson flame fist
+    specialColor: [255, 69, 0]
   }
 ];
 
@@ -575,6 +621,22 @@ function renderFighter(buf, ox, oy, char, pose) {
     buf.fillCircle(headX, headY - 9, 2.2, [210, 20, 30]);
   }
 
+  // YUGA SIGNATURE: Aviator Glasses with Fiery Reflection!
+  if (char.specialFeature === 'aviator_glasses') {
+    // Metal brow bar
+    buf.fillRect(headX - 9, headY - 4, 19, 1.5, [180, 170, 160]);
+    // Left lens frame & fiery glass
+    buf.fillRect(headX - 9, headY - 2, 8, 8, [200, 180, 70]);
+    buf.fillRect(headX - 8, headY - 1, 6, 6, [255, 85, 0], 190);
+    buf.fillRect(headX - 7, headY, 3, 3, [255, 200, 50], 220);
+    // Right lens frame & fiery glass
+    buf.fillRect(headX + 2, headY - 2, 8, 8, [200, 180, 70]);
+    buf.fillRect(headX + 3, headY - 1, 6, 6, [255, 85, 0], 190);
+    buf.fillRect(headX + 4, headY, 3, 3, [255, 200, 50], 220);
+    // Bridge
+    buf.fillRect(headX - 1, headY, 3, 1.5, [180, 170, 160]);
+  }
+
   // Nose bridge & mouth
   buf.fillLimb(headX + 1, headY, headX + 2, headY + 6, 1.8, 1.5, skinShadow);
   if (pose.battleRoar) {
@@ -726,6 +788,26 @@ function renderFighter(buf, ox, oy, char, pose) {
       buf.fillLimb(fxX - 25, fxY, fxX + 35, fxY, 4, 3, [255, 215, 0], [255, 255, 255]);
       buf.fillLimb(fxX + 15, fxY - 22, fxX + 35, fxY - 22, 3, 2, [255, 215, 0], [255, 255, 255]);
       buf.fillLimb(fxX + 15, fxY + 22, fxX + 35, fxY + 22, 3, 2, [255, 215, 0], [255, 255, 255]);
+    } else if (sType === 'azure_dragon') {
+      // Dharsan: Roaring Azure Celestial Meteor Burst
+      for (let r = 42; r > 0; r -= 4) {
+        buf.fillCircle(fxX, fxY, r, [0, 180, 216], 90);
+      }
+      for (let f = 0; f < 8; f++) {
+        const a = (f * 45) * (Math.PI / 180);
+        buf.fillCircle(fxX + Math.cos(a) * 28, fxY + Math.sin(a) * 20, 9, [0, 229, 255], 200);
+        buf.fillCircle(fxX + Math.cos(a) * 28, fxY + Math.sin(a) * 20, 5, [255, 255, 255], 255);
+      }
+    } else if (sType === 'infernal_blast') {
+      // Yuga: Blazing Infernal Horizon Concussive Wave
+      for (let sw = 14; sw <= 44; sw += 10) {
+        buf.fillCircle(fxX, fxY, sw, [255, 61, 0], 90);
+      }
+      for (let b = 0; b < 8; b++) {
+        const ba = (b * 45) * (Math.PI / 180);
+        buf.fillCircle(fxX + Math.cos(ba) * 30, fxY + Math.sin(ba) * 24, 8, [255, 140, 0], 210);
+        buf.fillCircle(fxX + Math.cos(ba) * 30, fxY + Math.sin(ba) * 24, 4, [255, 255, 255], 255);
+      }
     }
   }
 

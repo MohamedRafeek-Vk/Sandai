@@ -1459,11 +1459,11 @@ button {
   letter-spacing: 0.08em;
 }
 
-/* 8 Character Cards Grid */
+/* 10 Character Cards Grid */
 .char-grid-arcade {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.9rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.8rem;
 }
 
 .char-card-v2 {
@@ -4545,7 +4545,7 @@ button {
 
   .char-grid-arcade {
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
+    grid-template-columns: repeat(5, 1fr) !important;
     grid-template-rows: repeat(2, 1fr) !important;
     gap: 4px !important;
     padding: 2px 0 !important;

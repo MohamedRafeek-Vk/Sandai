@@ -613,7 +613,8 @@
     var btnRandom = document.getElementById('btn-random-char');
     if (btnRandom) {
       btnRandom.addEventListener('click', function () {
-        var randomId = Math.floor(Math.random() * 8);
+        var total = (window.SANDAI.CHARACTERS && window.SANDAI.CHARACTERS.length) ? window.SANDAI.CHARACTERS.length : 10;
+        var randomId = Math.floor(Math.random() * total);
         handleCharacterPick(randomId);
       });
     }
@@ -887,7 +888,9 @@
         'rgba(100, 255, 218, 0.4)',// Kiran (Tempest Silver)
         'rgba(118, 255, 3, 0.4)',  // Nawin (Toxic Acid Green)
         'rgba(255, 145, 0, 0.4)',  // Rafeek (Titan Bronze)
-        'rgba(255, 215, 0, 0.4)'   // Tharun (Solar Radiant Gold)
+        'rgba(255, 215, 0, 0.4)',  // Tharun (Solar Radiant Gold)
+        'rgba(0, 180, 216, 0.45)', // Dharsan (Azure Celestial Flame)
+        'rgba(255, 61, 0, 0.45)'   // Yuga (Infernal Horizon Blaze)
       ];
       var chosenColor = charColors[charId] || 'rgba(0, 102, 255, 0.35)';
       atmosphere.style.background = 'radial-gradient(circle at 35% 50%, ' + chosenColor + ' 0%, transparent 70%)';

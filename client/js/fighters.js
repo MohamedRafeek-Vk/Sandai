@@ -9,7 +9,7 @@
 
   window.SANDAI = window.SANDAI || {};
 
-  // ── 8 Selectable Characters Data ─────────────────────────────
+  // ── 10 Selectable Characters Data ────────────────────────────
   const CHARACTERS = [
     {
       id: 0,
@@ -170,6 +170,46 @@
       heightScale: 1.02,
       widthScale: 0.98,
       gearType: 'divine_halo'
+    },
+    {
+      id: 8,
+      name: 'Dharsan',
+      style: 'Azure Flame',
+      archetype: 'Flame Brawler',
+      color: '#00b4d8',
+      secondaryColor: '#ff6f00',
+      hairColor: '#1a1614',
+      shirtColor: '#0077b6',
+      speed: 7,
+      power: 8,
+      defense: 6,
+      special: 8,
+      abilityName: 'Azure Dragon Comet',
+      abilityDesc: 'Channels roaring azure celestial flames into a high-speed penetrating meteor strike that burns through guard.',
+      portraitFile: 'Dharsan.webp',
+      heightScale: 1.01,
+      widthScale: 1.0,
+      gearType: 'azure_flame_fists'
+    },
+    {
+      id: 9,
+      name: 'Yuga',
+      style: 'Ignite Horizon',
+      archetype: 'Flame Tactician',
+      color: '#ff3d00',
+      secondaryColor: '#37474f',
+      hairColor: '#181513',
+      shirtColor: '#263238',
+      speed: 8,
+      power: 7,
+      defense: 6,
+      special: 8,
+      abilityName: 'Infernal Horizon Blast',
+      abilityDesc: 'Focuses intense radiant heat through specialized ocular lenses, detonating an infernal concussive blast across the arena.',
+      portraitFile: 'Yuga.webp',
+      heightScale: 1.02,
+      widthScale: 0.98,
+      gearType: 'aviator_glasses'
     }
   ];
 

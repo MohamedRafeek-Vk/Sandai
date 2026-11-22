@@ -728,7 +728,9 @@
       0xdfa88d, // 4: Kiran - Fair duelist
       0xc48c6e, // 5: Nawin - Dusky acrobat
       0xba8264, // 6: Rafeek - Deep bronze colossus
-      0xdfa58a  // 7: Tharun - Radiant golden sage
+      0xdfa58a, // 7: Tharun - Radiant golden sage
+      0xd2997a, // 8: Dharsan - Warm olive-tan fighter
+      0xc88e70  // 9: Yuga - Warm bronze flame tactician
     ];
     var skinColor = new THREE.Color(skinColors[id] || 0xd59b78);
     var hairColor = new THREE.Color(charData.hairColor || 0x15161c);
@@ -1233,6 +1235,103 @@
         haloGroup.add(ray);
       }
       headBone.add(haloGroup);
+
+    } else if (charId === 8) {
+      // Dharsan: Voluminous Curly Dark Hair, Jaw Stubble & Glowing Amber Eye Light
+      var curlyBase = new THREE.Mesh(new THREE.SphereGeometry(0.19, 10, 10), hairMat);
+      curlyBase.position.set(0, 0.16, -0.02);
+      curlyBase.scale.set(1.15, 0.95, 1.15);
+      headBone.add(curlyBase);
+
+      // Curly hair curls cluster over crown and brow
+      var curlGeo = new THREE.SphereGeometry(0.065, 6, 6);
+      var curlPositions = [
+        [-0.08, 0.20, 0.08], [0.0, 0.22, 0.10], [0.08, 0.20, 0.08],
+        [-0.12, 0.14, 0.04], [0.12, 0.14, 0.04], [-0.04, 0.21, 0.02],
+        [0.05, 0.21, 0.02], [0.0, 0.18, 0.12]
+      ];
+      for (var ci = 0; ci < curlPositions.length; ci++) {
+        var curlMesh = new THREE.Mesh(curlGeo, hairMat);
+        curlMesh.position.set(curlPositions[ci][0], curlPositions[ci][1], curlPositions[ci][2]);
+        headBone.add(curlMesh);
+      }
+
+      // Trimmed jaw stubble along chin & lower cheeks
+      var stubble = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.12, 0.12), hairMat);
+      stubble.position.set(0, -0.06, 0.09);
+      headBone.add(stubble);
+
+      // Glowing Amber Eyes matching official portrait
+      var amberEyeL = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+      amberEyeL.position.set(-0.045, 0.04, 0.125);
+      headBone.add(amberEyeL);
+
+      var amberEyeR = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+      amberEyeR.position.set(0.045, 0.04, 0.125);
+      headBone.add(amberEyeR);
+
+    } else if (charId === 9) {
+      // Yuga: Voluminous Curly Dark Hair, Aviator Glasses with Fiery Reflection & Trimmed Beard
+      var curlyBaseY = new THREE.Mesh(new THREE.SphereGeometry(0.19, 10, 10), hairMat);
+      curlyBaseY.position.set(0, 0.16, -0.02);
+      curlyBaseY.scale.set(1.18, 0.95, 1.15);
+      headBone.add(curlyBaseY);
+
+      var curlGeoY = new THREE.SphereGeometry(0.065, 6, 6);
+      var curlPositionsY = [
+        [-0.08, 0.20, 0.07], [0.0, 0.22, 0.09], [0.08, 0.20, 0.07],
+        [-0.12, 0.14, 0.03], [0.12, 0.14, 0.03], [0.0, 0.18, 0.11]
+      ];
+      for (var ciy = 0; ciy < curlPositionsY.length; ciy++) {
+        var curlMeshY = new THREE.Mesh(curlGeoY, hairMat);
+        curlMeshY.position.set(curlPositionsY[ciy][0], curlPositionsY[ciy][1], curlPositionsY[ciy][2]);
+        headBone.add(curlMeshY);
+      }
+
+      // Trimmed Dark Beard & Mustache
+      var beardY = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.13, 0.13), hairMat);
+      beardY.position.set(0, -0.06, 0.09);
+      headBone.add(beardY);
+
+      // Realistic Aviator Metal-Frame Glasses
+      var glassesGroup = new THREE.Group();
+      glassesGroup.position.set(0, 0.04, 0.13);
+
+      var metalFrameMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.9, roughness: 0.2 });
+      var flameLensMat = new THREE.MeshBasicMaterial({ color: 0xff5500, transparent: true, opacity: 0.85 });
+
+      // Top Aviator Brow Bar
+      var topBar = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.012, 0.01), metalFrameMat);
+      topBar.position.set(0, 0.032, 0);
+      glassesGroup.add(topBar);
+
+      // Lower Bridge
+      var lowerBridge = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.01, 0.01), metalFrameMat);
+      lowerBridge.position.set(0, 0.01, 0);
+      glassesGroup.add(lowerBridge);
+
+      // Left Lens + Frame
+      var leftLens = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.034, 0.01, 8), flameLensMat);
+      leftLens.rotation.x = Math.PI / 2;
+      leftLens.position.set(-0.05, 0.005, 0);
+      glassesGroup.add(leftLens);
+
+      // Right Lens + Frame
+      var rightLens = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.034, 0.01, 8), flameLensMat);
+      rightLens.rotation.x = Math.PI / 2;
+      rightLens.position.set(0.05, 0.005, 0);
+      glassesGroup.add(rightLens);
+
+      // Glasses Temples
+      var leftTemple = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.01, 0.14), metalFrameMat);
+      leftTemple.position.set(-0.095, 0.02, -0.07);
+      glassesGroup.add(leftTemple);
+
+      var rightTemple = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.01, 0.14), metalFrameMat);
+      rightTemple.position.set(0.095, 0.02, -0.07);
+      glassesGroup.add(rightTemple);
+
+      headBone.add(glassesGroup);
     }
   };
 
@@ -1251,6 +1350,20 @@
       handL.add(s1);
       var s2 = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), sparkMat);
       handR.add(s2);
+    } else if (charId === 8) {
+      // Dharsan: Roaring Azure Flame Fist Auras
+      var azureFlameMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending });
+      var az1 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), azureFlameMat);
+      handL.add(az1);
+      var az2 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), azureFlameMat);
+      handR.add(az2);
+    } else if (charId === 9) {
+      // Yuga: Blazing Infernal Crimson Fist Auras
+      var crimsonFlameMat = new THREE.MeshBasicMaterial({ color: 0xff3d00, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending });
+      var cr1 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), crimsonFlameMat);
+      handL.add(cr1);
+      var cr2 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), crimsonFlameMat);
+      handR.add(cr2);
     }
   };
 

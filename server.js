@@ -11,7 +11,7 @@ const path = require('path');
 // ---------------------------------------------------------------------------
 const PORT = process.env.PORT || 3000;
 const CLIENT_URL = process.env.CLIENT_URL || '*';
-const VALID_CHARACTER_IDS = [0, 1, 2, 3, 4, 5, 6, 7];
+const VALID_CHARACTER_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const MAX_PLAYERS_PER_ROOM = 2;
 const RECONNECT_GRACE_MS = 30_000; // 30 seconds
 const RATE_LIMIT_WINDOW_MS = 1_000;
@@ -99,7 +99,9 @@ app.get('/api/characters', (_req, res) => {
       { id: 4, name: 'Kiran', style: 'Storm Blade', power: 7, speed: 7, defense: 5, special: 6, portrait: 'Kiran.webp' },
       { id: 5, name: 'Nawin', style: 'Venom Fury', power: 5, speed: 6, defense: 6, special: 9, portrait: 'Nawin.webp' },
       { id: 6, name: 'Rafeek', style: 'Titan Grip', power: 9, speed: 3, defense: 8, special: 5, portrait: 'Rafeek.webp' },
-      { id: 7, name: 'Tharun', style: 'Divine Wrath', power: 7, speed: 5, defense: 6, special: 7, portrait: 'Tharun.webp' }
+      { id: 7, name: 'Tharun', style: 'Divine Wrath', power: 7, speed: 5, defense: 6, special: 7, portrait: 'Tharun.webp' },
+      { id: 8, name: 'Dharsan', style: 'Azure Flame', power: 8, speed: 7, defense: 6, special: 8, portrait: 'Dharsan.webp' },
+      { id: 9, name: 'Yuga', style: 'Ignite Horizon', power: 7, speed: 8, defense: 6, special: 8, portrait: 'Yuga.webp' }
     ]
   });
 });

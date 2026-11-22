@@ -137,21 +137,21 @@ async function runStage3MultiplayerTests() {
     let receivedGuest = false;
 
     socketGuest.on('character-selected', (data) => {
-      if (data.playerIndex === 0 && data.characterId === 2) {
-        assert(data.characterId === 2, 'Host selected characterId 2 (Dhinesh) broadcasted');
+      if (data.playerIndex === 0 && data.characterId === 8) {
+        assert(data.characterId === 8, 'Host selected characterId 8 (Dharsan) broadcasted');
         assert(data.ready === false, 'Host selection resets ready state');
         receivedHost = true;
       }
-      if (data.playerIndex === 1 && data.characterId === 5) {
-        assert(data.characterId === 5, 'Guest selected characterId 5 (Nawin) broadcasted');
+      if (data.playerIndex === 1 && data.characterId === 9) {
+        assert(data.characterId === 9, 'Guest selected characterId 9 (Yuga) broadcasted');
         assert(data.ready === false, 'Guest selection resets ready state');
         receivedGuest = true;
       }
       if (receivedHost && receivedGuest) resolve();
     });
 
-    socketHost.emit('select-character', { roomCode, characterId: 2 });
-    socketGuest.emit('select-character', { roomCode, characterId: 5 });
+    socketHost.emit('select-character', { roomCode, characterId: 8 });
+    socketGuest.emit('select-character', { roomCode, characterId: 9 });
     setTimeout(() => reject(new Error('Character select timeout')), 4000);
   });
 
@@ -162,8 +162,8 @@ async function runStage3MultiplayerTests() {
       assert(data.arena === 'nightcity', `Match start synchronized arena: "${data.arena}"`);
       const p1 = data.players.find(p => p.playerIndex === 0);
       const p2 = data.players.find(p => p.playerIndex === 1);
-      assert(p1 && p1.characterId === 2, 'Host character is Dhinesh (ID 2)');
-      assert(p2 && p2.characterId === 5, 'Guest character is Nawin (ID 5)');
+      assert(p1 && p1.characterId === 8, 'Host character is Dharsan (ID 8)');
+      assert(p2 && p2.characterId === 9, 'Guest character is Yuga (ID 9)');
       resolve();
     });
     socketHost.emit('player-ready', { roomCode, ready: true });
