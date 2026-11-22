@@ -143,18 +143,18 @@ const Fighter = (function() {
   return sandbox.window.SANDAI.Fighter;
 })();
 
-test('Fighter.prototype.kick sets state to "kick" and initializes attack descriptor', () => {
+test('Fighter.prototype.kick sets state to "kick" and initializes 6-phase attack descriptor', () => {
   const f = new Fighter(null, 0, 0, 100, 300);
   f.kick();
   assert.strictEqual(f.state, 'kick');
   assert.strictEqual(f.isAttacking, true);
   assert(f.currentAttack, 'currentAttack must be set');
   assert.strictEqual(f.currentAttack.type, 'kick');
-  assert.strictEqual(f.currentAttack.startup, 5);
-  assert.strictEqual(f.currentAttack.activeStart, 6);
-  assert.strictEqual(f.currentAttack.activeEnd, 15);
-  assert.strictEqual(f.currentAttack.recovery, 11);
-  assert.strictEqual(f.currentAttack.totalDuration, 26);
+  assert.strictEqual(f.currentAttack.startup, 8);
+  assert.strictEqual(f.currentAttack.activeStart, 9);
+  assert.strictEqual(f.currentAttack.activeEnd, 19);
+  assert.strictEqual(f.currentAttack.recovery, 16);
+  assert.strictEqual(f.currentAttack.totalDuration, 35);
   assert.strictEqual(f.currentAttack.range, 125);
   assert.strictEqual(f.hitRegistered, false);
 });
@@ -168,24 +168,24 @@ test('Repeated K presses while kick is executing do NOT stack or reset attack', 
   assert.strictEqual(f.isAttacking, true);
 });
 
-test('Kick deals 0 damage during startup window (frames 0 to 5)', () => {
+test('Kick deals 0 damage during startup window (frames 0 to 8)', () => {
   const attacker = new Fighter(null, 0, 0, 100, 300);
   const target = new Fighter(null, 1, 1, 150, 300); // 50px away (in range)
   attacker.kick();
-  attacker.stateTimer = 3; // In startup
+  attacker.stateTimer = 5; // In startup chamber
   const hit = attacker.checkHit(target);
   assert.strictEqual(hit, false, 'No hit during startup');
   assert.strictEqual(target.health, 100, 'Target health unchanged');
 });
 
-test('Kick deals damage when in active window (frame 6 to 15) and within range', () => {
+test('Kick deals damage when in active window (frame 9 to 19) and within range', () => {
   const attacker = new Fighter(null, 0, 0);
   const target = new Fighter(null, 1, 1);
   attacker.x = 300;
   target.x = 380; // 80px away (in 125px range)
   target.y = attacker.y;
   attacker.kick();
-  attacker.stateTimer = 8; // In active strike window
+  attacker.stateTimer = 12; // In active strike apex window
   const hit = attacker.checkHit(target);
   assert.strictEqual(hit, true, 'Kick should connect during active window');
   assert(target.health < 100, 'Target should take damage');
@@ -214,12 +214,12 @@ test('Single kick cannot cause multiple damage events (hitRegistered prevents mu
   target.x = 380;
   target.y = attacker.y;
   attacker.kick();
-  attacker.stateTimer = 8;
+  attacker.stateTimer = 11; // In active strike apex window (frame 9 to 19)
   attacker.checkHit(target);
   const healthAfterFirst = target.health;
 
   // Next frame in active window
-  attacker.stateTimer = 9;
+  attacker.stateTimer = 12;
   const secondHit = attacker.checkHit(target);
   assert.strictEqual(secondHit, false, 'Second checkHit must return false');
   assert.strictEqual(target.health, healthAfterFirst, 'Health must not decrease again from same kick');
@@ -232,7 +232,7 @@ test('Blocking reduces kick damage by 70% and causes block stun & guard drain', 
   unblockedTarget.x = 380;
   unblockedTarget.y = attacker.y;
   attacker.kick();
-  attacker.stateTimer = 8;
+  attacker.stateTimer = 11; // In active window
   attacker.checkHit(unblockedTarget);
   const unblockedDmg = 100 - unblockedTarget.health;
 
@@ -243,7 +243,7 @@ test('Blocking reduces kick damage by 70% and causes block stun & guard drain', 
   blockingTarget.y = attacker2.y;
   blockingTarget.block();
   attacker2.kick();
-  attacker2.stateTimer = 8;
+  attacker2.stateTimer = 11; // In active window
   attacker2.checkHit(blockingTarget);
   const blockedDmg = 100 - blockingTarget.health;
 
@@ -252,11 +252,11 @@ test('Blocking reduces kick damage by 70% and causes block stun & guard drain', 
   assert(blockingTarget.blockStunTimer > 0, 'Target should experience block stun');
 });
 
-test('Kick completes recovery and transitions smoothly back to idle', () => {
+test('Kick completes 35-frame recovery and transitions smoothly back to idle', () => {
   const f = new Fighter(null, 0, 0, 100, 300);
   f.kick();
-  // Simulate 30 frames
-  for (let i = 0; i < 30; i++) {
+  // Simulate 38 frames (35-frame total animation duration)
+  for (let i = 0; i < 38; i++) {
     f.update(16.667);
   }
   assert.strictEqual(f.state, 'idle', 'Fighter must return to idle state after recovery');

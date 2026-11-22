@@ -179,6 +179,16 @@
       window.SANDAI.Controls.initMobileOptimizations();
     }
 
+    // Maintain responsive UI across mobile orientation changes without page refresh or state loss
+    window.addEventListener('orientationchange', function () {
+      setTimeout(function () {
+        window.dispatchEvent(new Event('resize'));
+        if (window.SANDAI.Controls && typeof window.SANDAI.Controls.checkOrientation === 'function') {
+          window.SANDAI.Controls.checkOrientation();
+        }
+      }, 150);
+    });
+
     // Check for shareable room invitation link (e.g. ?room=ABCDEF or #room=ABCDEF)
     try {
       var urlParams = new URLSearchParams(window.location.search);

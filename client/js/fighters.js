@@ -352,24 +352,24 @@
     this.hitRegistered = false;
   };
 
-  // Heavy Attack (Kick): Martial arts front/side kick (Mae Geri) with active hitbox window & recovery
+  // Heavy Attack (Kick): Martial arts front snap/thrust kick (6-Phase Full-Motion) with active hitbox window & recovery
   Fighter.prototype.kick = function () {
     if (this.health <= 0 || this.isAttacking || this.attackCooldown > 0 || this.isBlocking || this.hitStunTimer > 0 || this.isGuardBroken) return;
     this.isAttacking = true;
     this.state = 'kick';
     this.stateTimer = 0;
-    this.attackCooldown = 26;
+    this.attackCooldown = 35;
     this.playAnim('kick');
 
     this.currentAttack = {
       type: 'kick',
       isHeavy: true,
       isJump: this.isJumping,
-      startup: 5,
-      activeStart: 6,
-      activeEnd: 15,
-      recovery: 11,
-      totalDuration: 26,
+      startup: 8,
+      activeStart: 9,
+      activeEnd: 19,
+      recovery: 16,
+      totalDuration: 35,
       range: KICK_RANGE,
       damage: (KICK_DAMAGE + this.statPower * 0.65) * (this.isJumping ? 1.25 : 1.0),
       guardDrain: 22,

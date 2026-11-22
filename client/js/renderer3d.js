@@ -756,8 +756,10 @@
       var qFootRRest  = new THREE.Quaternion(-0.57771, -0.04967, -0.16396, 0.79806);
       var qThighLRest = new THREE.Quaternion(0.9639, 0.1104, -0.0136, 0.2419);
       var qCalfLRest  = new THREE.Quaternion(0.1849, -0.1121, 0.0212, 0.9761);
+      var qFootLRest  = new THREE.Quaternion(-0.52907, -0.00033, 0.00034, 0.84858);
       var qArmLRest   = new THREE.Quaternion(-0.2865, 0.6735, -0.4958, 0.4674);
       var qArmRRest   = new THREE.Quaternion(-0.2942, -0.6807, 0.4693, 0.4795);
+      var qNeckRest   = new THREE.Quaternion(0.015, 0, 0, 0.999);
 
       function rotQuat(qBase, xDeg, yDeg, zDeg) {
         var q = qBase.clone();
@@ -776,118 +778,144 @@
         return res;
       }
 
-      // 1. Ground Martial Arts Front Kick (Mae Geri)
-      // 0.00s: Stance -> 0.08s: Chamber (knee high, calf tucked) -> 0.16s: Extend -> 0.22s: Full Strike -> 0.28s: Snap Retract -> 0.38s: Re-chamber -> 0.52s: Return to Stance
-      var times = [0.0, 0.08, 0.16, 0.22, 0.28, 0.38, 0.52];
+      // 1. Ground Martial Arts Front Snap/Thrust Kick (6 Biomechanical Phases, 0.58s = 35 frames)
+      // Phase 1 (0.00 - 0.08s): Preparation (stance, weight shift to left leg, foot_l pivot 15 deg, defensive guard)
+      // Phase 2 (0.08 - 0.18s): Chamber (high knee lift to chest, tight calf tuck against hamstring, hip rotation, foot_l pivot 35 deg)
+      // Phase 3 (0.18 - 0.26s): Kick Extension (explosive uncoiling, forward pelvic thrust, full knee extension, foot flexed)
+      // Phase 4 (0.26 - 0.32s): Impact & Apex Hold (60ms strike hold window, active hitbox synchronization)
+      // Phase 5 (0.32 - 0.42s): Retraction (fast snap recoil to chamber pose, pelvis de-rotates, foot_l begins un-pivoting)
+      // Phase 6 (0.42 - 0.58s): Recovery (controlled foot descent and plant, foot_l un-pivots to neutral, seamless blend to idle)
+      var times = [0.0, 0.08, 0.18, 0.26, 0.32, 0.42, 0.58];
 
       var thighR = [
         qThighRRest,
-        rotQuat(qThighRRest, -52, 6, 8),
-        rotQuat(qThighRRest, -82, 10, 12),
-        rotQuat(qThighRRest, -84, 10, 12),
-        rotQuat(qThighRRest, -75, 8, 10),
-        rotQuat(qThighRRest, -38, 4, 4),
+        rotQuat(qThighRRest, -35, 6, 8),
+        rotQuat(qThighRRest, -68, 10, 14),
+        rotQuat(qThighRRest, -88, 12, 14),
+        rotQuat(qThighRRest, -88, 12, 14),
+        rotQuat(qThighRRest, -60, 8, 10),
         qThighRRest
       ];
 
       var calfR = [
         qCalfRRest,
-        rotQuat(qCalfRRest, 85, 0, 0),
-        rotQuat(qCalfRRest, -24, 0, 0),
-        rotQuat(qCalfRRest, -24, 0, 0),
-        rotQuat(qCalfRRest, 48, 0, 0),
+        rotQuat(qCalfRRest, 65, 0, 0),
+        rotQuat(qCalfRRest, 105, 0, 0),
+        rotQuat(qCalfRRest, -12, 0, 0),
+        rotQuat(qCalfRRest, -12, 0, 0),
         rotQuat(qCalfRRest, 75, 0, 0),
         qCalfRRest
       ];
 
       var footR = [
         qFootRRest,
+        rotQuat(qFootRRest, -15, 0, 0),
+        rotQuat(qFootRRest, -25, 0, 0),
+        rotQuat(qFootRRest, -38, 0, 0),
+        rotQuat(qFootRRest, -38, 0, 0),
         rotQuat(qFootRRest, -20, 0, 0),
-        rotQuat(qFootRRest, -35, 0, 0),
-        rotQuat(qFootRRest, -35, 0, 0),
-        rotQuat(qFootRRest, -20, 0, 0),
-        rotQuat(qFootRRest, -10, 0, 0),
         qFootRRest
       ];
 
       var thighL = [
         qThighLRest,
         rotQuat(qThighLRest, 8, -4, 0),
+        rotQuat(qThighLRest, 14, -8, 0),
         rotQuat(qThighLRest, 12, -6, 0),
         rotQuat(qThighLRest, 12, -6, 0),
         rotQuat(qThighLRest, 8, -4, 0),
-        rotQuat(qThighLRest, 4, -2, 0),
         qThighLRest
       ];
 
       var calfL = [
         qCalfLRest,
         rotQuat(qCalfLRest, 12, 0, 0),
-        rotQuat(qCalfLRest, 18, 0, 0),
-        rotQuat(qCalfLRest, 18, 0, 0),
-        rotQuat(qCalfLRest, 12, 0, 0),
-        rotQuat(qCalfLRest, 6, 0, 0),
+        rotQuat(qCalfLRest, 20, 0, 0),
+        rotQuat(qCalfLRest, 16, 0, 0),
+        rotQuat(qCalfLRest, 16, 0, 0),
+        rotQuat(qCalfLRest, 10, 0, 0),
         qCalfLRest
+      ];
+
+      // Supporting Left Foot Pivots for Biomechanically Realistic Hip Clearance
+      var footL = [
+        qFootLRest,
+        rotQuat(qFootLRest, 0, 15, 0),
+        rotQuat(qFootLRest, 0, 35, 0),
+        rotQuat(qFootLRest, 0, 35, 0),
+        rotQuat(qFootLRest, 0, 35, 0),
+        rotQuat(qFootLRest, 0, 18, 0),
+        qFootLRest
       ];
 
       var spine1 = [
         qSpine1Rest,
         rotQuat(qSpine1Rest, -6, 0, -4),
-        rotQuat(qSpine1Rest, -14, 0, -8),
-        rotQuat(qSpine1Rest, -14, 0, -8),
-        rotQuat(qSpine1Rest, -10, 0, -6),
-        rotQuat(qSpine1Rest, -4, 0, -2),
+        rotQuat(qSpine1Rest, -16, 0, -10),
+        rotQuat(qSpine1Rest, -18, 0, -10),
+        rotQuat(qSpine1Rest, -18, 0, -10),
+        rotQuat(qSpine1Rest, -8, 0, -5),
         qSpine1Rest
       ];
 
       var spine2 = [
         qSpine2Rest,
+        rotQuat(qSpine2Rest, -4, 0, -3),
+        rotQuat(qSpine2Rest, -12, 0, -8),
+        rotQuat(qSpine2Rest, -14, 0, -8),
+        rotQuat(qSpine2Rest, -14, 0, -8),
         rotQuat(qSpine2Rest, -6, 0, -4),
-        rotQuat(qSpine2Rest, -12, 0, -6),
-        rotQuat(qSpine2Rest, -12, 0, -6),
-        rotQuat(qSpine2Rest, -8, 0, -4),
-        rotQuat(qSpine2Rest, -3, 0, -2),
         qSpine2Rest
+      ];
+
+      var neck1 = [
+        qNeckRest,
+        rotQuat(qNeckRest, 4, 0, 0),
+        rotQuat(qNeckRest, 8, 0, 0),
+        rotQuat(qNeckRest, 10, 0, 0),
+        rotQuat(qNeckRest, 10, 0, 0),
+        rotQuat(qNeckRest, 5, 0, 0),
+        qNeckRest
       ];
 
       var pelvis = [
         qPelvisRest,
-        rotQuat(qPelvisRest, 4, 8, 0),
-        rotQuat(qPelvisRest, 8, 14, 0),
-        rotQuat(qPelvisRest, 8, 14, 0),
-        rotQuat(qPelvisRest, 6, 10, 0),
-        rotQuat(qPelvisRest, 2, 4, 0),
+        rotQuat(qPelvisRest, 2, 8, -2),
+        rotQuat(qPelvisRest, 8, 22, -4),
+        rotQuat(qPelvisRest, 10, 24, -4),
+        rotQuat(qPelvisRest, 10, 24, -4),
+        rotQuat(qPelvisRest, 5, 12, -2),
         qPelvisRest
       ];
 
       var p0 = [0.005, 0.086, 0.877];
       var pelvisPos = [
         p0[0], p0[1], p0[2],
-        p0[0] - 0.02, p0[1] - 0.03, p0[2] - 0.02,
-        p0[0] + 0.04, p0[1] - 0.02, p0[2] + 0.08,
-        p0[0] + 0.04, p0[1] - 0.02, p0[2] + 0.08,
+        p0[0] - 0.02, p0[1] - 0.02, p0[2] - 0.01,
+        p0[0] + 0.02, p0[1] - 0.02, p0[2] + 0.05,
+        p0[0] + 0.05, p0[1] - 0.02, p0[2] + 0.10,
+        p0[0] + 0.05, p0[1] - 0.02, p0[2] + 0.10,
         p0[0] + 0.02, p0[1] - 0.01, p0[2] + 0.04,
-        p0[0], p0[1] - 0.01, p0[2] + 0.01,
         p0[0], p0[1], p0[2]
       ];
 
       var armL = [
         qArmLRest,
-        rotQuat(qArmLRest, 5, 0, 8),
-        rotQuat(qArmLRest, 10, 0, 14),
-        rotQuat(qArmLRest, 10, 0, 14),
-        rotQuat(qArmLRest, 6, 0, 10),
-        rotQuat(qArmLRest, 3, 0, 4),
+        rotQuat(qArmLRest, 8, 0, 12),
+        rotQuat(qArmLRest, 12, 0, 16),
+        rotQuat(qArmLRest, 14, 0, 18),
+        rotQuat(qArmLRest, 14, 0, 18),
+        rotQuat(qArmLRest, 8, 0, 12),
         qArmLRest
       ];
 
       var armR = [
         qArmRRest,
-        rotQuat(qArmRRest, -8, 0, -10),
-        rotQuat(qArmRRest, -18, 0, -20),
-        rotQuat(qArmRRest, -18, 0, -20),
+        rotQuat(qArmRRest, -10, 0, -12),
+        rotQuat(qArmRRest, -16, 0, -16),
+        rotQuat(qArmRRest, -22, 0, -24),
+        rotQuat(qArmRRest, -22, 0, -24),
         rotQuat(qArmRRest, -12, 0, -14),
-        rotQuat(qArmRRest, -5, 0, -6),
         qArmRRest
       ];
 
@@ -897,15 +925,17 @@
         new THREE.QuaternionKeyframeTrack('foot_r.quaternion', times, flattenQuats(footR)),
         new THREE.QuaternionKeyframeTrack('thigh_l.quaternion', times, flattenQuats(thighL)),
         new THREE.QuaternionKeyframeTrack('calf_l.quaternion', times, flattenQuats(calfL)),
+        new THREE.QuaternionKeyframeTrack('foot_l.quaternion', times, flattenQuats(footL)),
         new THREE.QuaternionKeyframeTrack('spine_01.quaternion', times, flattenQuats(spine1)),
         new THREE.QuaternionKeyframeTrack('spine_02.quaternion', times, flattenQuats(spine2)),
+        new THREE.QuaternionKeyframeTrack('neck_01.quaternion', times, flattenQuats(neck1)),
         new THREE.QuaternionKeyframeTrack('pelvis.quaternion', times, flattenQuats(pelvis)),
         new THREE.VectorKeyframeTrack('pelvis.position', times, pelvisPos),
         new THREE.QuaternionKeyframeTrack('upperarm_l.quaternion', times, flattenQuats(armL)),
         new THREE.QuaternionKeyframeTrack('upperarm_r.quaternion', times, flattenQuats(armR))
       ];
 
-      var groundClip = new THREE.AnimationClip('Kick_Martial_Arts', 0.52, groundTracks);
+      var groundClip = new THREE.AnimationClip('Kick_Martial_Arts', 0.58, groundTracks);
 
       // 2. Aerial Flying Jump Kick
       var jumpTimes = [0.0, 0.08, 0.16, 0.28, 0.42, 0.55];
@@ -1028,11 +1058,9 @@
       actions['heavy_punch'] = actions['Punch_Cross'];
 
       // Dedicated Martial Arts Kick Animations (Front Snap/Thrust Kick & Flying Jump Kick)
-      if (!actions['Kick_Martial_Arts'] || !actions['Kick_Jump_Martial']) {
-        var kickClips = buildMartialArtsKickClips();
-        if (!actions['Kick_Martial_Arts']) actions['Kick_Martial_Arts'] = mixer.clipAction(kickClips.groundClip);
-        if (!actions['Kick_Jump_Martial']) actions['Kick_Jump_Martial'] = mixer.clipAction(kickClips.jumpClip);
-      }
+      var kickClips = buildMartialArtsKickClips();
+      actions['Kick_Martial_Arts'] = mixer.clipAction(kickClips.groundClip);
+      actions['Kick_Jump_Martial'] = mixer.clipAction(kickClips.jumpClip);
       actions['kick'] = actions['Kick_Martial_Arts'];
       actions['kick_jump'] = actions['Kick_Jump_Martial'];
 

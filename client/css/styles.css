@@ -1739,6 +1739,140 @@ button {
 }
 
 /* ==========================================================================
+   CINEMATIC MATCH LOADING SCREEN
+   ========================================================================== */
+.screen-loading-arcade {
+  background: radial-gradient(ellipse at center, #0e1c3f 0%, #030611 85%);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-cinematic-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.8rem;
+  width: 100%;
+  max-width: 550px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loading-logo-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.loading-title {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #fff;
+  text-shadow: 0 0 25px rgba(0, 229, 255, 0.6);
+  line-height: 1;
+}
+
+.loading-tag {
+  color: var(--neon-cyan);
+  font-size: 0.6em;
+  vertical-align: super;
+}
+
+.loading-arena-subtitle {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  letter-spacing: 0.2em;
+  color: #8da0c7;
+  text-transform: uppercase;
+}
+
+.loading-orb-container {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-orb-ring {
+  position: absolute;
+  inset: 0;
+  border: 3px solid transparent;
+  border-top-color: var(--neon-cyan);
+  border-right-color: var(--blaze-orange);
+  border-radius: 50%;
+  animation: spinOrb 1.4s linear infinite;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+}
+
+.loading-orb-core {
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle, #fff 0%, var(--neon-cyan) 60%, transparent 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 30px var(--neon-cyan);
+  animation: pulseCore 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes spinOrb {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseCore {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.15); opacity: 1.0; }
+}
+
+.loading-bar-container {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.loading-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-neon);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon-cyan) 0%, #00ff88 50%, var(--blaze-orange) 100%);
+  border-radius: 3px;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.8);
+  transition: width 0.25s ease-out;
+}
+
+.loading-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: #8da0c7;
+}
+
+.loading-percent {
+  color: var(--neon-cyan);
+  font-weight: 700;
+}
+
+/* ==========================================================================
    SCREEN 5: CINEMATIC VS FACEOFF SCREEN
    ========================================================================== */
 .screen-vs-arcade {
@@ -2980,6 +3114,37 @@ button {
     font-size: 0.78rem !important;
   }
 
+  /* ── 1.5. DEVICE SELECT (Mobile Layout) ── */
+  .screen-device-arcade {
+    padding: calc(10px + var(--safe-top)) 1rem calc(16px + var(--safe-bottom)) 1rem !important;
+    overflow-y: auto !important;
+  }
+
+  .device-cards-arcade {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 1rem auto !important;
+  }
+
+  .device-card-slanted {
+    padding: 1.2rem 1rem !important;
+  }
+
+  .device-icon-box {
+    margin-bottom: 0.6rem !important;
+  }
+
+  .device-label {
+    font-size: 1.4rem !important;
+  }
+
+  .device-sub {
+    font-size: 0.78rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+
   /* ── 2. GAME MODE SELECT (Mobile Layout) ── */
   .screen-mode-arcade {
     padding: calc(10px + var(--safe-top)) 0.75rem calc(16px + var(--safe-bottom)) 0.75rem !important;
@@ -3604,6 +3769,119 @@ button {
     font-size: 0.95rem !important;
     padding: 0 1.2rem !important;
   }
+
+  /* ── 10. LOADING SCREEN (Mobile Layout) ── */
+  .screen-loading-arcade {
+    padding: calc(10px + var(--safe-top)) 1rem calc(16px + var(--safe-bottom)) 1rem !important;
+  }
+
+  .loading-cinematic-wrap {
+    padding: 1.5rem 1rem !important;
+    gap: 1.2rem !important;
+    max-width: 100% !important;
+  }
+
+  .loading-title {
+    font-size: 2.2rem !important;
+  }
+
+  .loading-orb-container {
+    width: 70px !important;
+    height: 70px !important;
+  }
+
+  .loading-bar-container {
+    max-width: 320px !important;
+  }
+
+  /* ── 11. CINEMATIC VS FACEOFF SCREEN (Mobile Portrait Layout) ── */
+  .screen-vs-arcade {
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .vs-layout-v2 {
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: calc(8px + var(--safe-top)) 1rem calc(8px + var(--safe-bottom)) 1rem !important;
+    gap: 0.5rem !important;
+    overflow: hidden !important;
+  }
+
+  .vs-fighter-v2 {
+    width: 100% !important;
+    max-width: 280px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .vs-portrait-wrap {
+    width: 140px !important;
+    height: 160px !important;
+    border-width: 2px !important;
+    margin: 0 auto !important;
+  }
+
+  .vs-info-box {
+    margin-top: 0.3rem !important;
+  }
+
+  .vs-fighter-name {
+    font-size: 1.8rem !important;
+    line-height: 1 !important;
+  }
+
+  .vs-fighter-style {
+    font-size: 0.75rem !important;
+  }
+
+  .vs-center-v2 {
+    gap: 0.3rem !important;
+    margin: 0.2rem 0 !important;
+  }
+
+  .vs-emblem-box {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .vs-text-v2 {
+    font-size: 1.4rem !important;
+  }
+
+  .vs-arena-badge-wrap {
+    font-size: 0.68rem !important;
+  }
+
+  /* ── 12. SYSTEM SETTINGS & MODALS (Mobile Portrait Layout) ── */
+  .modal-box {
+    width: 95% !important;
+    max-width: 95vw !important;
+    max-height: 85dvh !important;
+    border-radius: 10px !important;
+  }
+
+  .modal-header {
+    padding: 0.8rem 1rem !important;
+  }
+
+  .modal-title {
+    font-size: 1.3rem !important;
+  }
+
+  .modal-body {
+    padding: 0.8rem 1rem !important;
+  }
+
+  .modal-footer {
+    padding: 0.8rem 1rem !important;
+  }
+
+  .setting-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.4rem !important;
+  }
 }
 
 /* ==========================================================================
@@ -3841,5 +4119,945 @@ button {
 @media screen and (orientation: portrait) and (max-width: 900px) {
   body.in-fight #landscape-prompt:not(.dismissed):not(.hidden) {
     display: flex !important;
+  }
+}
+
+/* ==========================================================================
+   MOBILE LANDSCAPE DEDICATED PRE-GAME INTERFACE (Height <= 550px)
+   Side-by-side, zero-scroll layouts for character select, stage select, menus
+   ========================================================================== */
+@media screen and (orientation: landscape) and (max-height: 550px) {
+  /* 1. Global Viewport & Button Constraints */
+  html, body {
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .screen {
+    height: 100dvh !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .btn-back {
+    top: calc(4px + var(--safe-top)) !important;
+    left: calc(6px + var(--safe-left)) !important;
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.1rem !important;
+    z-index: 90 !important;
+  }
+
+  /* 2. Main Menu / Home Screen (Side-by-Side 2-Column Grid) */
+  .screen-home-arcade {
+    padding: calc(6px + var(--safe-top)) calc(12px + var(--safe-right)) calc(6px + var(--safe-bottom)) calc(12px + var(--safe-left)) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .home-arcade-stage {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 !important;
+  }
+
+  .home-stage-left {
+    display: grid !important;
+    grid-template-columns: 1fr 1.15fr !important;
+    gap: 1.2rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 860px !important;
+    margin: 0 auto !important;
+  }
+
+  .logo-hero-group {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+  }
+
+  .home-primary-action-wrap {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+  }
+
+  .logo-sandai-massive {
+    flex-direction: row !important;
+    align-items: baseline !important;
+    gap: 0.5rem !important;
+  }
+
+  .word-sandai {
+    font-size: clamp(1.8rem, 4.5vw, 2.5rem) !important;
+    line-height: 0.95 !important;
+  }
+
+  .word-edition {
+    font-size: clamp(0.9rem, 2vw, 1.2rem) !important;
+  }
+
+  .tagline-arcade {
+    font-size: 0.68rem !important;
+    letter-spacing: 0.05em !important;
+    line-height: 1.2 !important;
+    margin: 2px 0 !important;
+  }
+
+  .btn-hero-start {
+    height: 42px !important;
+    font-size: 1.05rem !important;
+    padding: 0 1.2rem !important;
+    margin-top: 4px !important;
+    width: 100% !important;
+  }
+
+  .home-nav-rail.home-quick-modes {
+    grid-column: 2 !important;
+    grid-row: 1 / span 2 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.45rem !important;
+    width: 100% !important;
+  }
+
+  .nav-slat {
+    padding: 0.45rem 0.6rem !important;
+    min-height: 46px !important;
+    height: auto !important;
+    border-radius: 6px !important;
+  }
+
+  .slat-index {
+    font-size: 0.95rem !important;
+    margin-right: 0.4rem !important;
+  }
+
+  .slat-title {
+    font-size: 0.78rem !important;
+  }
+
+  .slat-desc {
+    font-size: 0.6rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .slat-icon {
+    font-size: 0.95rem !important;
+  }
+
+  /* 3. Device Selection Screen (Side-by-Side Horizontal Row) */
+  .screen-device-arcade {
+    padding: calc(6px + var(--safe-top)) 1rem calc(6px + var(--safe-bottom)) 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .screen-device-arcade .screen-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  .screen-device-arcade .heading-arcade {
+    font-size: 1.25rem !important;
+    margin: 2px 0 !important;
+  }
+
+  .screen-device-arcade .heading-sub {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .screen-device-arcade .screen-header-tag {
+    font-size: 0.62rem !important;
+  }
+
+  .device-cards-arcade {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 1rem !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 580px !important;
+    margin: 0 auto !important;
+  }
+
+  .device-card-slanted {
+    flex: 1 1 0 !important;
+    max-height: 180px !important;
+    padding: 0.6rem 0.8rem !important;
+  }
+
+  .device-card-slanted .device-icon-box {
+    margin-bottom: 0.25rem !important;
+  }
+
+  .device-card-slanted .device-icon {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .device-card-slanted .device-label {
+    font-size: 0.95rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .device-card-slanted .device-sub {
+    font-size: 0.62rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .device-card-slanted .device-badge {
+    font-size: 0.58rem !important;
+    padding: 1px 5px !important;
+  }
+
+  /* 4. Game Mode Selection Screen (4 Columns In 1 Row) */
+  .screen-mode-arcade {
+    padding: calc(6px + var(--safe-top)) 1rem calc(6px + var(--safe-bottom)) 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .screen-mode-arcade .screen-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  .screen-mode-arcade .mode-header {
+    margin-bottom: 0.4rem !important;
+    padding: 0 40px !important;
+  }
+
+  .screen-mode-arcade .heading-arcade {
+    font-size: 1.25rem !important;
+    margin: 2px 0 0.3rem 0 !important;
+  }
+
+  .mode-grid-arcade {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    max-width: 780px !important;
+    margin-top: 0 !important;
+  }
+
+  .mode-card-slanted {
+    padding: 0.5rem 0.4rem !important;
+    min-height: 115px !important;
+    max-height: 145px !important;
+  }
+
+  .mode-card-slanted .mode-tag {
+    font-size: 0.56rem !important;
+    padding: 1px 4px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .mode-card-slanted .mode-icon svg {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .mode-card-slanted .mode-label {
+    font-size: 0.78rem !important;
+    margin: 2px 0 !important;
+  }
+
+  .mode-card-slanted .mode-desc {
+    font-size: 0.58rem !important;
+    line-height: 1.15 !important;
+  }
+
+  /* 5. Character Selection Screen (Dedicated Asymmetric 36/64 Side-by-Side Roster) */
+  .screen-charselect-arcade {
+    height: 100dvh !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+
+  .charselect-container-arcade {
+    height: 100% !important;
+    max-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: calc(4px + var(--safe-top)) calc(10px + var(--safe-right)) calc(4px + var(--safe-bottom)) calc(10px + var(--safe-left)) !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .charselect-header-arcade {
+    margin-bottom: 2px !important;
+    padding: 0 44px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .heading-charselect {
+    font-size: 1.05rem !important;
+    margin: 0 !important;
+  }
+
+  .selection-step-indicator {
+    font-size: 0.62rem !important;
+    gap: 3px !important;
+  }
+
+  .step-pill {
+    padding: 1px 5px !important;
+  }
+
+  .btn-random-pick {
+    height: 30px !important;
+    font-size: 0.65rem !important;
+    padding: 0 0.5rem !important;
+  }
+
+  .charselect-stage-grid {
+    display: grid !important;
+    grid-template-columns: 36% 64% !important;
+    gap: 0.6rem !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+  }
+
+  .char-detail-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    padding: 0 !important;
+    gap: 2px !important;
+    overflow: hidden !important;
+  }
+
+  .preview-showcase-container {
+    height: min(36vh, 135px) !important;
+    width: 100% !important;
+    max-width: 190px !important;
+    margin: 0 auto !important;
+    position: relative !important;
+  }
+
+  .preview-3d-frame,
+  .preview-portrait-frame {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 6px !important;
+  }
+
+  .preview-toggle-bar {
+    bottom: 2px !important;
+    gap: 3px !important;
+  }
+
+  .btn-preview-toggle {
+    padding: 1px 5px !important;
+    font-size: 0.56rem !important;
+  }
+
+  .detail-header-info {
+    margin: 1px 0 !important;
+    gap: 6px !important;
+  }
+
+  .detail-name {
+    font-size: 1.05rem !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+  }
+
+  .detail-style {
+    font-size: 0.58rem !important;
+    padding: 1px 4px !important;
+  }
+
+  .detail-archetype {
+    font-size: 0.54rem !important;
+    padding: 1px 4px !important;
+  }
+
+  .detail-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2px 6px !important;
+    width: 100% !important;
+    max-width: 210px !important;
+    padding: 0 !important;
+  }
+
+  .stat-lbl {
+    font-size: 0.54rem !important;
+    width: 30px !important;
+  }
+
+  .stat-track {
+    height: 4px !important;
+  }
+
+  .stat-val {
+    font-size: 0.54rem !important;
+    width: 12px !important;
+  }
+
+  .detail-ability-card {
+    display: none !important;
+  }
+
+  .char-roster-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .roster-panel-header {
+    display: none !important;
+  }
+
+  .char-grid-arcade {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    grid-template-rows: repeat(2, 1fr) !important;
+    gap: 4px !important;
+    padding: 2px 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    flex-direction: unset !important;
+    flex-wrap: unset !important;
+  }
+
+  .char-card-v2 {
+    flex: unset !important;
+    width: 100% !important;
+    height: clamp(56px, 16vh, 68px) !important;
+    padding: 2px !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .card-portrait-wrap {
+    width: clamp(30px, 8vh, 38px) !important;
+    height: clamp(30px, 8vh, 38px) !important;
+    border-radius: 50% !important;
+    margin: 0 auto !important;
+  }
+
+  .card-name {
+    font-size: 0.6rem !important;
+    margin-top: 1px !important;
+    font-weight: 700 !important;
+  }
+
+  .card-style {
+    display: none !important;
+  }
+
+  .charselect-footer {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 2px 0 !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+  }
+
+  .selection-status-chips {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+    margin-bottom: 0 !important;
+    flex: 1 !important;
+  }
+
+  .status-chip {
+    padding: 2px 5px !important;
+    font-size: 0.6rem !important;
+    white-space: nowrap !important;
+  }
+
+  .btn-confirm-fighter {
+    width: auto !important;
+    min-width: 155px !important;
+    height: 38px !important;
+    font-size: 0.9rem !important;
+    padding: 0 0.8rem !important;
+    border-radius: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* 6. Stage Selection Screen (Landscape Swipe Carousel) */
+  .screen-arenaselect-arcade {
+    height: 100dvh !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+
+  .arenaselect-layout {
+    height: 100% !important;
+    max-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: calc(4px + var(--safe-top)) calc(12px + var(--safe-right)) calc(6px + var(--safe-bottom)) calc(12px + var(--safe-left)) !important;
+    overflow: hidden !important;
+  }
+
+  .arenaselect-layout .heading-arcade {
+    font-size: 1.15rem !important;
+    margin: 0 !important;
+    padding: 0 40px !important;
+  }
+
+  .arenaselect-layout .screen-header-tag {
+    font-size: 0.62rem !important;
+  }
+
+  .arenaselect-layout .select-prompt {
+    display: none !important;
+  }
+
+  .arena-panoramic-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    padding: 4px 0 !important;
+    flex: 1 !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+
+  .arena-panoramic-grid .arena-card,
+  .arena-card-panoramic {
+    flex: 0 0 clamp(160px, 24vw, 200px) !important;
+    max-width: 210px !important;
+    height: min(46vh, 175px) !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  .arena-panoramic-grid .arena-card .arena-thumb {
+    height: clamp(75px, 20vh, 90px) !important;
+  }
+
+  .arena-panoramic-grid .arena-card .arena-info {
+    padding: 0.35rem 0.5rem !important;
+  }
+
+  .arena-panoramic-grid .arena-card .arena-title {
+    font-size: 0.8rem !important;
+    margin: 0 0 2px 0 !important;
+  }
+
+  .arena-panoramic-grid .arena-card .arena-desc {
+    font-size: 0.6rem !important;
+    line-height: 1.15 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .btn-enter-battle,
+  .btn-confirm-arena {
+    height: 38px !important;
+    font-size: 0.98rem !important;
+    margin-top: 4px !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    align-self: center !important;
+  }
+
+  /* 7. Keyboard Controls Guide (Side-by-Side 2-Column Grid) */
+  .screen-guide-arcade {
+    padding: calc(4px + var(--safe-top)) 1rem calc(6px + var(--safe-bottom)) 1rem !important;
+    overflow-y: auto !important;
+  }
+
+  .screen-guide-arcade .heading-arcade {
+    font-size: 1.15rem !important;
+    margin: 0 !important;
+    padding: 0 40px !important;
+  }
+
+  .screen-guide-arcade .guide-subtitle {
+    font-size: 0.65rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  .screen-guide-arcade .screen-header-tag {
+    font-size: 0.62rem !important;
+  }
+
+  .controls-guide-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+
+  .controls-player-card {
+    padding: 0.4rem 0.6rem !important;
+  }
+
+  .controls-card-header {
+    margin-bottom: 4px !important;
+  }
+
+  .player-badge {
+    font-size: 0.65rem !important;
+    padding: 1px 6px !important;
+  }
+
+  .controls-tag {
+    font-size: 0.6rem !important;
+  }
+
+  .key-binding-row {
+    padding: 2px 0 !important;
+    font-size: 0.68rem !important;
+  }
+
+  .key-cap {
+    min-width: 20px !important;
+    height: 20px !important;
+    font-size: 0.65rem !important;
+    padding: 0 4px !important;
+  }
+
+  .btn-start-fight-guide {
+    height: 36px !important;
+    font-size: 0.95rem !important;
+    margin-top: 4px !important;
+  }
+
+  /* 8. Cinematic Match Loading Screen */
+  .screen-loading-arcade {
+    height: 100dvh !important;
+    overflow: hidden !important;
+    padding: calc(6px + var(--safe-top)) 1rem calc(6px + var(--safe-bottom)) 1rem !important;
+  }
+
+  .loading-cinematic-wrap {
+    padding: 0.8rem 1rem !important;
+    gap: 0.5rem !important;
+    justify-content: center !important;
+    height: 100% !important;
+  }
+
+  .loading-title {
+    font-size: 1.4rem !important;
+  }
+
+  .loading-arena-subtitle {
+    font-size: 0.7rem !important;
+  }
+
+  .loading-orb-container {
+    width: 50px !important;
+    height: 50px !important;
+    margin: 0 auto !important;
+  }
+
+  .loading-orb-core {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .loading-bar-container {
+    max-width: 380px !important;
+    gap: 0.3rem !important;
+  }
+
+  .loading-bar-track {
+    height: 6px !important;
+  }
+
+  .loading-status {
+    font-size: 0.62rem !important;
+  }
+
+  .loading-percent {
+    font-size: 0.68rem !important;
+  }
+
+  /* 9. Cinematic VS Face-Off Screen (Side-by-Side Bounded Fit) */
+  .screen-vs-arcade {
+    height: 100dvh !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+
+  .vs-layout-v2 {
+    height: 100% !important;
+    max-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    padding: calc(6px + var(--safe-top)) 1rem calc(6px + var(--safe-bottom)) 1rem !important;
+    overflow: hidden !important;
+  }
+
+  .vs-fighter-v2 {
+    max-height: min(65vh, 220px) !important;
+    flex: 0 1 36% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: auto !important;
+  }
+
+  .vs-portrait-wrap {
+    width: min(28vw, 150px) !important;
+    height: min(42vh, 140px) !important;
+    border-radius: 8px !important;
+    border-width: 2px !important;
+  }
+
+  .vs-info-box {
+    margin-top: 2px !important;
+  }
+
+  .vs-fighter-name {
+    font-size: 1.2rem !important;
+    margin: 2px 0 !important;
+    line-height: 1 !important;
+  }
+
+  .vs-fighter-style {
+    font-size: 0.62rem !important;
+  }
+
+  .vs-player-role {
+    font-size: 0.58rem !important;
+  }
+
+  .vs-center-v2 {
+    flex: 0 0 16% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+  }
+
+  .vs-emblem-box {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .vs-text-v2 {
+    font-size: 1.3rem !important;
+  }
+
+  .vs-arena-badge-wrap {
+    font-size: 0.62rem !important;
+    margin-top: 2px !important;
+  }
+
+  /* 10. Custom Room Lobby Screen */
+  .screen-lobby-arcade {
+    padding: calc(4px + var(--safe-top)) 1rem calc(6px + var(--safe-bottom)) 1rem !important;
+    overflow-y: auto !important;
+  }
+
+  .lobby-initial-view {
+    margin: 0.4rem auto !important;
+    max-width: 520px !important;
+  }
+
+  .panel-card-inner {
+    padding: 0.6rem 1rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .panel-desc {
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  .btn-create, .btn-join {
+    height: 38px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .lobby-tabs {
+    margin-bottom: 0.4rem !important;
+  }
+
+  .lobby-tab {
+    padding: 0.35rem 0.8rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .join-form {
+    padding: 0.6rem 1rem !important;
+  }
+
+  .join-label {
+    font-size: 0.72rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  .input-code {
+    height: 38px !important;
+    font-size: 1.1rem !important;
+  }
+
+  .lobby-header-bar {
+    margin-bottom: 2px !important;
+    padding: 0 40px !important;
+  }
+
+  .lobby-title {
+    font-size: 1.1rem !important;
+  }
+
+  .connection-status {
+    font-size: 0.68rem !important;
+  }
+
+  .lobby-code-banner {
+    padding: 3px 8px !important;
+    gap: 6px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .code-text {
+    font-size: 1.15rem !important;
+  }
+
+  .btn-lobby-action {
+    padding: 3px 6px !important;
+    font-size: 0.65rem !important;
+  }
+
+  .lobby-slots-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .lobby-player-slot {
+    padding: 4px 6px !important;
+    min-height: 110px !important;
+    max-height: 130px !important;
+  }
+
+  .slot-portrait-frame {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .slot-name {
+    font-size: 0.82rem !important;
+    margin: 1px 0 !important;
+  }
+
+  .slot-style {
+    font-size: 0.58rem !important;
+  }
+
+  .slot-ready-status {
+    font-size: 0.6rem !important;
+    padding: 1px 4px !important;
+  }
+
+  .btn-slot-change {
+    font-size: 0.58rem !important;
+    padding: 2px 4px !important;
+  }
+
+  .arena-selector-section {
+    padding: 3px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .lobby-arena-pill {
+    padding: 2px 6px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .btn-start-match,
+  .btn-lobby-ready {
+    height: 36px !important;
+    font-size: 0.92rem !important;
+  }
+
+  /* 11. Modal Dialogs (Settings, Server Config, Move List) */
+  .modal-box.modal-box-arcade {
+    max-height: 92vh !important;
+    max-width: 620px !important;
+    padding: 0.6rem 0.8rem !important;
+    overflow-y: auto !important;
+  }
+
+  .modal-title {
+    font-size: 1.05rem !important;
+  }
+
+  .setting-section-title {
+    font-size: 0.72rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .setting-row {
+    padding: 2px 0 !important;
+  }
+
+  .setting-label strong {
+    font-size: 0.76rem !important;
+  }
+
+  .setting-label span {
+    font-size: 0.6rem !important;
+  }
+
+  .btn-toggle-option {
+    padding: 2px 5px !important;
+    font-size: 0.65rem !important;
+  }
+
+  .btn-reset-settings,
+  .btn-save-settings {
+    height: 34px !important;
+    font-size: 0.82rem !important;
+    padding: 0 0.8rem !important;
   }
 }
