@@ -98,16 +98,28 @@
   }
   window.SANDAI.updateVSScreen = updateVSScreen;
 
-  // ── Screen Management ────────────────────────────────────────
+  // ── Screen Management (Strict Active Screen Isolation & Non-Interactive Inactive Screens) ──
   function showScreen(screenId) {
     var screens = document.querySelectorAll('.screen');
     screens.forEach(function (s) {
       s.classList.remove('active');
+      s.style.setProperty('display', 'none', 'important');
+      s.style.setProperty('pointer-events', 'none', 'important');
+      s.style.setProperty('visibility', 'hidden', 'important');
+      s.style.setProperty('opacity', '0', 'important');
+      s.style.setProperty('z-index', '-1', 'important');
+      s.setAttribute('aria-hidden', 'true');
     });
 
     var target = document.getElementById(screenId);
     if (target) {
       target.classList.add('active');
+      target.style.setProperty('display', 'flex', 'important');
+      target.style.setProperty('pointer-events', 'auto', 'important');
+      target.style.setProperty('visibility', 'visible', 'important');
+      target.style.setProperty('opacity', '1', 'important');
+      target.style.setProperty('z-index', screenId === 'screen-loading' ? '100' : '10', 'important');
+      target.setAttribute('aria-hidden', 'false');
       window.SANDAI.currentScreen = screenId.replace('screen-', '');
     }
 
@@ -190,10 +202,12 @@
     });
 
     // Check for shareable room invitation link (e.g. ?room=ABCDEF or #room=ABCDEF)
+    var hasInvite = false;
     try {
       var urlParams = new URLSearchParams(window.location.search);
       var inviteCode = urlParams.get('room') || (window.location.hash.startsWith('#room=') ? window.location.hash.replace('#room=', '') : '');
       if (inviteCode && inviteCode.length === 6) {
+        hasInvite = true;
         window.SANDAI.gameMode = 'online';
         showScreen('screen-lobby');
         var inputCode = document.getElementById('input-room-code');
@@ -211,6 +225,11 @@
         }, 600);
       }
     } catch (e) {}
+
+    // Enforce initial active screen state: strictly display only screen-home and isolate all other screens
+    if (!hasInvite) {
+      showScreen('screen-home');
+    }
   });
 
   // ── Home Screen & Settings Modal ─────────────────────────────
@@ -1058,11 +1077,23 @@
     if (statusEl) statusEl.textContent = 'INITIALIZING 3D ENVIRONMENT...';
 
     var progress = 0;
+    var hasProceeded = false;
+
+    // Safety watchdog: Guarantee loading screen auto-advances even if asset load delays
+    var watchdogTimer = setTimeout(function () {
+      if (!hasProceeded && window.SANDAI.currentScreen === 'loading') {
+        console.warn('[SANDAI Loading] Safety watchdog triggered, proceeding to VS screen...');
+        clearInterval(loadInterval);
+        proceedToVS();
+      }
+    }, 4500);
+
     var loadInterval = setInterval(function () {
       progress += Math.floor(Math.random() * 18) + 12;
       if (progress >= 100) {
         progress = 100;
         clearInterval(loadInterval);
+        clearTimeout(watchdogTimer);
         if (barEl) barEl.style.width = '100%';
         if (percentEl) percentEl.textContent = '100%';
         if (statusEl) statusEl.textContent = 'BATTLE READY!';
@@ -1082,12 +1113,20 @@
     if (retryBtn) {
       retryBtn.onclick = function () {
         if (errorEl) errorEl.classList.add('hidden');
+        clearTimeout(watchdogTimer);
+        clearInterval(loadInterval);
         startMatchSequence();
       };
     }
 
     function proceedToVS() {
-      var vsP1Img = document.getElementById('vs-p1-img');
+      if (hasProceeded) return;
+      hasProceeded = true;
+      clearTimeout(watchdogTimer);
+      clearInterval(loadInterval);
+
+      try {
+        var vsP1Img = document.getElementById('vs-p1-img');
       var vsP1Name = document.getElementById('vs-p1-name');
       var vsP1Style = document.getElementById('vs-p1-style');
 
@@ -1121,7 +1160,14 @@
           window.SANDAI.startGame();
         }
       }, 2200);
+    } catch (e) {
+      console.warn('[SANDAI Loading] Error in proceedToVS:', e);
+      showScreen('screen-game');
+      if (window.SANDAI.startGame) {
+        window.SANDAI.startGame();
+      }
     }
+  }
   }
 
   // ── Online Multiplayer Lobby & Real-Time Sync ───────────────
